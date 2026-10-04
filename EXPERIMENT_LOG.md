@@ -224,3 +224,39 @@ Format: date, what and why, exact command, result, decision.
   - Test added for the classification (49 passed).
 - **Next:** one clean full gate run with 200 seeds, replacing the combination
   of E2 (50 seeds) and E3 (200 seeds, λ = 1 only) as the reported result.
+
+## 2026-10-04 — E7: OFFICIAL gate, one consistent run with 200 seeds
+
+- **Command** (student's laptop): `python scripts/check_gate.py --seeds 200 --out-dir results/gate_200seeds`
+- **Result, primary measure (discounted with γ = 0.99, averaged over all steps):**
+
+  | λ | ρ | Rc(1) | Rd(1) | Rc(0) | Rd(0) | Δ [95% CI] | (1) | (2) | fear | greed | dilemma |
+  |---|---|---|---|---|---|---|---|---|---|---|---|
+  | 0 | 0.5 | 0.682 | 1.648 | 0.144 | 0.948 | 0.966 [0.928, 1.005] | no | yes | yes | yes | no |
+  | 0 | 0.75 | 0.701 | 1.652 | 0.144 | 0.948 | 0.951 [0.913, 0.990] | no | yes | yes | yes | no |
+  | 0 | 1 | 0.763 | 1.707 | 0.144 | 0.948 | 0.944 [0.902, 0.984] | no | yes | yes | yes | no |
+  | ½ | 0.5 | 0.624 | 0.891 | 0.116 | 0.530 | 0.266 [0.241, 0.293] | yes | yes | yes | yes | yes |
+  | ½ | 0.75 | 0.652 | 0.896 | 0.116 | 0.530 | 0.244 [0.217, 0.270] | yes | yes | yes | yes | yes |
+  | ½ | 1 | 0.768 | 0.943 | 0.116 | 0.530 | 0.175 [0.147, 0.203] | yes | yes | yes | yes | yes |
+  | 1 | 0.5 | 0.409 | 0.088 | 0.065 | 0.072 | −0.321 [−0.341, −0.300] | yes | yes | yes | no | yes |
+  | 1 | 0.75 | 0.461 | 0.092 | 0.065 | 0.072 | −0.369 [−0.392, −0.346] | yes | yes | yes | no | yes |
+  | 1 | 1 | 0.736 | 0.103 | 0.065 | 0.072 | −0.632 [−0.659, −0.604] | yes | yes | yes | no | yes |
+
+  Gate: A yes, B yes, C yes (Δ > 0 also at λ = ½). **PASSES.** No condition
+  is unclear on the primary measure. This run replaces E2 + E3 as the
+  reported gate result; figure `results/gate_200seeds/schelling_disc_avg.png`.
+- **Other measures:** undiscounted, λ = ½ is a dilemma only at ρ = 1 (ρ = 0.5,
+  0.75: condition 1 unclear); λ = 1 a dilemma at every ρ. Discounted from the
+  start of the episode, no condition is a dilemma.
+- **Observations for the analysis:**
+  - λ = ½ is a full (fear and greed) dilemma at every teacher level, with
+    positive cost Δ = 0.18–0.27: the core condition.
+  - λ = 1 is a fear-only dilemma at every teacher level, with Δ < 0.
+  - **At λ = ½, Δ falls as the teacher becomes more restrained** (0.27, 0.24,
+    0.18 for ρ = 0.5, 0.75, 1): a restrained teacher keeps patches alive, so
+    restraint costs the student less. Teacher level (H2) and cost (H1) are
+    therefore not independent across conditions; H2 comparisons at fixed λ
+    also differ in Δ. To be stated in the analysis; plotting transmission
+    against the measured Δ of every condition makes this visible.
+- **Settings confirmed:** T = 1500, p̄ = 0.001, γ = 0.99. Phase 1 results are
+  unaffected (same environment and settings).
