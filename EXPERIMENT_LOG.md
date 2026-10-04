@@ -128,3 +128,65 @@ Format: date, what and why, exact command, result, decision.
   per step, so that is what is implemented.
 - **Next:** train the teacher (seed 0) on the laptop; decide trained vs
   scripted teacher; record the official levels.
+
+## 2026-10-04 — E5: Phase 1 complete — the teacher and its three levels
+
+- **Trained teacher** (student's laptop): `python scripts/train_teacher.py --seed <s>`
+  for s = 0, 1, 2 (alone, λ = 1, γ = 0.99, 600 episodes, 50 final evaluation
+  episodes, reliability threshold 0.95 restraint per encounter):
+
+  | seed | restraint per encounter | return | last apples taken/ep (late training) | reliable? |
+  |---|---|---|---|---|
+  | 0 | 0.029 | 22.88 | 3.4–4.0 | no |
+  | 1 | 0.000 | 21.32 | 3.8–4.0 | no |
+  | 2 | 0.776 | 20.30 | 2.9–3.9 | no |
+
+  All three end near the return of a purely greedy agent (20.18) and about
+  half that of the restrained policy (41.04). Learning made the agent greedier:
+  at episode 1 (nearly untrained) seed 0 earned 35.95 with restraint 0.739.
+- **Seed 2 shows why restraint must be read with outcomes:** a restraint rate
+  of 0.776 with about 3 last apples taken per episode and a greedy-level
+  return. It often arrives beside a last apple, leaves and returns; each
+  arrival is a new encounter, most are declined, but the apple is eventually
+  taken and the patch dies.
+- **Check that the environment is not at fault** (assistant's sandbox; lone
+  agent at λ = 1, 50 episodes, scripted policies):
+
+  | measure | restrained π_R | greedy π_G | difference |
+  |---|---|---|---|
+  | undiscounted | 41.04 | 20.18 | +20.86 |
+  | γ = 0.99, averaged over all steps | 1.836 | 0.250 | +1.59 |
+  | γ = 0.99, from the start of the episode | 13.64 | 16.60 | −2.96 |
+  | γ = 0.999, from the start of the episode | 27.88 | 19.78 | +8.11 |
+
+  The environment rewards restraint (it doubles the harvest), and the
+  learner's own objective, averaged over the states it visits, favours it.
+  From the start of an episode, however, greed pays more within a γ = 0.99
+  horizon, and the learner's state does not reveal the time in the episode or
+  a patch's history. Restraint is therefore profitable but hard to learn alone:
+  the immediate +1 for a last apple wins over a cost that arrives hundreds of
+  steps later. This is a learning difficulty, not an environment fault.
+- **Decision:** the trained teacher is not reliably restrained in any seed, so
+  the fallback applies: **the scripted restrained policy π_R is the teacher.**
+  (Not tried: a teacher trained with γ = 0.999, for which restraint pays even
+  from the start of an episode. Optional; not needed for the study.)
+- **Teacher levels, official** (student's laptop):
+  `python scripts/make_teacher_levels.py --teacher scripted`
+  (alone, λ = 1, 50 evaluation episodes)
+
+  | ρ | restraint per encounter [95% CI] | per step | return | last apples taken/ep | all patches dead |
+  |---|---|---|---|---|---|
+  | 0.5 | 0.247 [0.200, 0.290] | 0.475 | 26.32 | 3.60 | 62% |
+  | 0.75 | 0.427 [0.372, 0.475] | 0.759 | 28.72 | 3.54 | 58% |
+  | 1 | 1.000 [1.000, 1.000] | 1.000 | 41.72 | 0.00 | 0% |
+
+  Identical to the preliminary measurement in E4 (reproduced exactly).
+  Adjacent levels have non-overlapping 95% CIs. These measured rates are the
+  teacher levels for H2.
+- **Considered and set aside:** training the teacher among other learners so
+  that it learns restraint. Independent learners in commons dilemmas usually
+  converge on over-harvesting, the learning difficulty above would remain, and
+  a learned teacher would vary in more than restraint, weakening the control
+  needed for H2. A teacher trained with a prosocial reward is noted as possible
+  future work.
+- **Next:** Phase 2, the students.

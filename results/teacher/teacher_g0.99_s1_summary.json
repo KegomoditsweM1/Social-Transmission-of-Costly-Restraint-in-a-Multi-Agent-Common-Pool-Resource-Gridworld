@@ -1,0 +1,27 @@
+{
+  "config": {
+    "seed": 1,
+    "episodes": 600,
+    "alpha": 0.1,
+    "gamma": 0.99,
+    "beta": 5.0,
+    "q_init": 1.0,
+    "lam": 1.0,
+    "eval_every": 100,
+    "eval_episodes": 20,
+    "final_eval_episodes": 50,
+    "eval_epsilon": 0.05,
+    "reliable": 0.95,
+    "out_dir": "results/teacher"
+  },
+  "final_eval": {
+    "return": 21.32,
+    "restraint": 0.0,
+    "restraint_step": 0.0,
+    "protected_taken_per_ep": 3.86,
+    "encounters": 193,
+    "fully_depleted_frac": 0.86
+  },
+  "reliable": false,
+  "train_seconds": 344
+}

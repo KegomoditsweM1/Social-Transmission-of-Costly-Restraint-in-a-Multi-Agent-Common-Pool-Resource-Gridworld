@@ -1,0 +1,47 @@
+{
+  "teacher": "scripted",
+  "lam": 1.0,
+  "episodes": 50,
+  "levels": [
+    {
+      "rho": 0.5,
+      "restraint": 0.2468619246861925,
+      "restraint_ci": [
+        0.19999999999999996,
+        0.29008249199704506
+      ],
+      "restraint_step": 0.47521865889212833,
+      "protected_taken_per_ep": 3.6,
+      "encounters_total": 239,
+      "return_mean": 26.32,
+      "fully_depleted_frac": 0.62
+    },
+    {
+      "rho": 0.75,
+      "restraint": 0.4271844660194175,
+      "restraint_ci": [
+        0.37241379310344824,
+        0.47478116821161903
+      ],
+      "restraint_step": 0.7591836734693878,
+      "protected_taken_per_ep": 3.54,
+      "encounters_total": 309,
+      "return_mean": 28.72,
+      "fully_depleted_frac": 0.58
+    },
+    {
+      "rho": 1.0,
+      "restraint": 1.0,
+      "restraint_ci": [
+        1.0,
+        1.0
+      ],
+      "restraint_step": 1.0,
+      "protected_taken_per_ep": 0.0,
+      "encounters_total": 715,
+      "return_mean": 41.72,
+      "fully_depleted_frac": 0.0
+    }
+  ],
+  "levels_separated": true
+}
