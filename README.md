@@ -259,10 +259,10 @@ progress; see the roadmap below.
 
 | Stage | Contents | Status |
 |---|---|---|
-| Environment | gridworld, scripted policies, dilemma validation | ✅ complete |
-| Teacher | tabular Q-learner, teacher training, three measured teacher levels | 🔄 in progress |
-| Students | asocial, value shaping, decision biasing; pilot | ⬜ planned |
-| Evaluation | CT metric, persistence after the teacher is removed, partner tests, analysis | ⬜ planned |
+| Environment | gridworld, scripted policies, dilemma validation | complete |
+| Teacher | tabular Q-learner, teacher training, three measured teacher levels | in progress |
+| Students | asocial, value shaping, decision biasing; pilot | planned |
+| Evaluation | CT metric, persistence after the teacher is removed, partner tests, analysis | planned |
 
 ---
 
