@@ -179,8 +179,14 @@ def main():
     print(f"   B  no social dilemma at lambda = 0 (any rho)      : {B}")
     print(f"   C  some condition with Delta > 0                  : {C_any}")
     print(f"      ... and some condition with lambda > 0         : {C_pos}   (the informative case)")
-    print(f"   -> gate {'PASSES' if summary['gate']['passes'] else 'FAILS'}"
-          f"{'' if C_pos else '  (note: Delta > 0 only where restraint protects nothing)'}")
+    subset = (0.0 not in args.lams or not pos or 1.0 not in args.rhos)
+    summary["gate"]["subset_run"] = subset
+    if subset:
+        print("   -> NO VERDICT: this run covers only part of the conditions (the gate needs "
+              "lambda = 0, at least one lambda > 0, and rho = 1). Combine it with a full run.")
+    else:
+        print(f"   -> gate {'PASSES' if summary['gate']['passes'] else 'FAILS'}"
+              f"{'' if C_pos else '  (note: Delta > 0 only where restraint protects nothing)'}")
     (out / "gate_summary.json").write_text(json.dumps(summary, indent=2))
 
     plot(summary, args, out)

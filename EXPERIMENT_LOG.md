@@ -96,3 +96,35 @@ Format: date, what and why, exact command, result, decision.
   - Δ ranges from about +0.96 (λ = 0) to −0.65 (λ = 1), giving H1 a wide range.
 - **Settings confirmed:** T = 1500, p̄ = 0.001, γ = 0.99.
 - **Next:** Phase 1 (the teacher).
+
+## 2026-10-02 — E4: Phase 1 built (learner, teacher training, teacher levels)
+
+- **What:** `agents/` (state representation with wall mask, tabular
+  Q-learner with softmax, episode runner with the Section 6.5 evaluation rule,
+  `FrozenTeacher` following Eq. 9), `scripts/train_teacher.py` (lone teacher
+  at λ = 1; reports whether its restraint per encounter reaches 0.95, a
+  PROVISIONAL reliability threshold), `scripts/make_teacher_levels.py`
+  (restraint per encounter, Eq. 10, with bootstrap CIs; per step reported as
+  secondary). `check_gate.py` now gives no verdict for runs that cover only
+  part of the conditions.
+- **Checks:** `python -m pytest -q` → 48 passed (18 new).
+- **Preliminary measurement of the SCRIPTED levels** (assistant's sandbox;
+  seeded, so it should reproduce exactly on the laptop):
+  `python scripts/make_teacher_levels.py --teacher scripted` (alone, λ = 1,
+  50 episodes)
+
+  | ρ | restraint per encounter [95% CI] | per step | last apples taken/ep | all patches dead |
+  |---|---|---|---|---|
+  | 0.5 | 0.247 [0.200, 0.290] | 0.475 | 3.60 | 62% |
+  | 0.75 | 0.427 [0.372, 0.475] | 0.759 | 3.54 | 58% |
+  | 1 | 1.000 [1.000, 1.000] | 1.000 | 0.00 | 0% |
+
+  Adjacent levels are distinct. Realised restraint is far below the nominal ρ
+  because Eq. 9 draws at EVERY step a last apple is adjacent, and the teacher
+  often waits beside one for several steps (leaving it through a 3-step wait
+  at ρ = 0.75 has probability 0.75³ ≈ 0.42). The proposal already uses the
+  measured rate as the level. Point for the supervisor: drawing once per
+  ENCOUNTER would make the realised rate close to ρ; Eq. 9 as written means
+  per step, so that is what is implemented.
+- **Next:** train the teacher (seed 0) on the laptop; decide trained vs
+  scripted teacher; record the official levels.
