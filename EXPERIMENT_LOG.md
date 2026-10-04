@@ -190,3 +190,37 @@ Format: date, what and why, exact command, result, decision.
   needed for H2. A teacher trained with a prosocial reward is noted as possible
   future work.
 - **Next:** Phase 2, the students.
+
+## 2026-10-04 — E6: review of the gate; three-valued labels; pilot to include λ = ½
+
+- **Review received** (on the 50-seed gate figure). Points and responses:
+  1. *All three teacher levels at λ = ½ are relevant (positive cost, dilemma).*
+     Agreed. Already quantified with 95% CIs in E2: Δ = 0.295 [0.248, 0.342]
+     (ρ = 0.5), 0.290 [0.237, 0.342] (ρ = 0.75), 0.174 [0.120, 0.228] (ρ = 1).
+     Gap: the FIGURE showed no uncertainty. Fixed (error bars).
+  2. *λ = 1 labelled "no dilemma" although point estimates suggest a fear-driven
+     dilemma.* Correct. The code requires each condition's 95% interval to lie
+     above 0; at 50 seeds fear was not established, and the label printed
+     "no" where it should have said "not established". With 200 seeds (E3)
+     fear is established, so λ = 1 is a fear-only dilemma. R_c(0) and R_d(0)
+     involve the greedy partner, not the teacher, so this applies at EVERY ρ.
+  3. *Dilemma status and teacher-side cost are separate questions.* Agreed;
+     they were separate columns in the tables and separate gate conditions
+     (A and C), but the figure titles showed only the dilemma label. Fixed.
+  4. *The pilot should include λ = ½.* Agreed: λ = ½ is the only setting where
+     restraint is both individually costly and collectively valuable.
+     **Decision: the pilot uses λ ∈ {0, ½, 1}** (proposed amendment to the
+     pilot description: "using value shaping and the asocial control at
+     λ ∈ {0, ½, 1} with the fully restrained teacher; λ = ½ is included
+     because it is the setting in which restraint is both individually costly
+     and collectively valuable").
+- **Changes to `scripts/check_gate.py`:**
+  - dilemma status is now **yes / no / unclear**: "no" only if a required
+    condition is ruled out (interval below 0) or both temptations are ruled
+    out; "unclear" when more seeds are needed; the gate lists unclear conditions;
+  - Schelling diagrams show 95% bootstrap CIs on every point, and each panel
+    title gives the dilemma status AND Δ with its CI;
+  - per-pairing means are stored with their CIs in `gate_summary.json`.
+  - Test added for the classification (49 passed).
+- **Next:** one clean full gate run with 200 seeds, replacing the combination
+  of E2 (50 seeds) and E3 (200 seeds, λ = 1 only) as the reported result.

@@ -99,7 +99,30 @@ def paired_ci(a, b, n_boot=5000, seed=0):
 
 
 def holds(ci) -> str:
+    """A comparison holds ('yes') only if its 95% interval lies above 0, fails
+    ('no') only if it lies below 0, and is 'unclear' otherwise."""
     return "yes" if ci[1] > 0 else ("no" if ci[2] < 0 else "unclear")
+
+
+def classify(cond1: str, cond2: str, fear: str, greed: str) -> str:
+    """Social dilemma: (1) and (2) must hold, and at least one of fear / greed.
+    'yes'     every required condition is established;
+    'no'      a required condition is ruled out (its interval lies below 0),
+              or both temptations are ruled out;
+    'unclear' otherwise (more seeds are needed to decide)."""
+    if cond1 == "yes" and cond2 == "yes" and "yes" in (fear, greed):
+        return "yes"
+    if "no" in (cond1, cond2) or (fear == "no" and greed == "no"):
+        return "no"
+    return "unclear"
+
+
+def mean_ci(x, n_boot=5000, seed=0):
+    """Mean of x with a 95% bootstrap interval (for error bars)."""
+    x = np.asarray(x, float)
+    rng = np.random.default_rng(seed)
+    m = rng.choice(x, size=(n_boot, len(x)), replace=True).mean(axis=1)
+    return float(x.mean()), float(np.percentile(m, 2.5)), float(np.percentile(m, 97.5))
 
 
 def main():
@@ -146,9 +169,9 @@ def main():
                 rc0, rd0 = series(lam, rho, "C", "greedy", m), series(lam, rho, "D", "greedy", m)
                 c1, c2 = paired_ci(rc1, rd0), paired_ci(rc1, rc0)
                 fear, greed = paired_ci(rd0, rc0), paired_ci(rd1, rc1)
-                dilemma = holds(c1) == "yes" and holds(c2) == "yes" and "yes" in (holds(fear), holds(greed))
-                cond[m] = {"Rc1": float(np.mean(rc1)), "Rd1": float(np.mean(rd1)),
-                           "Rc0": float(np.mean(rc0)), "Rd0": float(np.mean(rd0)),
+                dilemma = classify(holds(c1), holds(c2), holds(fear), holds(greed))
+                cond[m] = {"Rc1": mean_ci(rc1), "Rd1": mean_ci(rd1),
+                           "Rc0": mean_ci(rc0), "Rd0": mean_ci(rd0),
                            "Delta": greed, "cond1": holds(c1), "cond2": holds(c2),
                            "fear": holds(fear), "greed": holds(greed), "dilemma": dilemma}
             summary["conditions"].append(cond)
@@ -161,20 +184,23 @@ def main():
         for c in summary["conditions"]:
             v = c[m]
             d = v["Delta"]
-            print(f"{c['lam']:6.2f} {c['rho']:5.2f} {v['Rc1']:8.3f} {v['Rd1']:8.3f} {v['Rc0']:8.3f} {v['Rd0']:8.3f}"
-                  f"  {d[0]:8.3f} [{d[1]:7.3f}, {d[2]:7.3f}]  {v['cond1']:7s} {v['cond2']:7s} "
-                  f"{v['fear']:7s} {v['greed']:7s} {'YES' if v['dilemma'] else 'no'}")
+            print(f"{c['lam']:6.2f} {c['rho']:5.2f} {v['Rc1'][0]:8.3f} {v['Rd1'][0]:8.3f} {v['Rc0'][0]:8.3f} "
+                  f"{v['Rd0'][0]:8.3f}  {d[0]:8.3f} [{d[1]:7.3f}, {d[2]:7.3f}]  {v['cond1']:7s} {v['cond2']:7s} "
+                  f"{v['fear']:7s} {v['greed']:7s} {v['dilemma'].upper() if v['dilemma'] == 'yes' else v['dilemma']}")
 
     P = {(c["lam"], c["rho"]): c[PRIMARY] for c in summary["conditions"]}
     pos = [lam for lam in args.lams if lam > 0]
-    A = all(P[(lam, 1.0)]["dilemma"] for lam in pos) if 1.0 in args.rhos else None
-    B = all(not P[(0.0, rho)]["dilemma"] for rho in args.rhos) if 0.0 in args.lams else None
+    A = all(P[(lam, 1.0)]["dilemma"] == "yes" for lam in pos) if 1.0 in args.rhos else None
+    B = all(P[(0.0, rho)]["dilemma"] == "no" for rho in args.rhos) if 0.0 in args.lams else None
+    unclear = [(lam, rho) for (lam, rho), v in P.items() if v["dilemma"] == "unclear"]
     C_any = any(v["Delta"][1] > 0 for v in P.values())
     C_pos = any(v["Delta"][1] > 0 for (lam, _), v in P.items() if lam > 0)
     summary["gate"] = {"A_dilemma_at_lambda_gt_0_rho_1": A, "B_no_dilemma_at_lambda_0": B,
                        "C_Delta_gt_0_any_condition": C_any, "C_Delta_gt_0_some_lambda_gt_0": C_pos,
                        "passes": bool(A and B and C_any)}
     print(f"\nGATE (on {PRIMARY}):")
+    if unclear:
+        print(f"   note: dilemma status UNCLEAR at (lambda, rho) = {unclear}: more seeds are needed there")
     print(f"   A  social dilemma at every lambda > 0 with rho = 1 : {A}")
     print(f"   B  no social dilemma at lambda = 0 (any rho)      : {B}")
     print(f"   C  some condition with Delta > 0                  : {C_any}")
@@ -200,20 +226,27 @@ def plot(summary, args, out: Path):
 
     for m in MEASURES:
         fig, axes = plt.subplots(len(args.lams), len(args.rhos), squeeze=False,
-                                 figsize=(3.6 * len(args.rhos), 3.0 * len(args.lams)))
+                                 figsize=(3.8 * len(args.rhos), 3.2 * len(args.lams)))
         for c in summary["conditions"]:
             i, j = args.lams.index(c["lam"]), args.rhos.index(c["rho"])
             v, ax = c[m], axes[i][j]
-            ax.plot([0, 1], [v["Rc0"], v["Rc1"]], "o-", color="#2d69be", lw=2, label="restrained $R_c$")
-            ax.plot([0, 1], [v["Rd0"], v["Rd1"]], "s-", color="#d9534f", lw=2, label="greedy $R_d$")
-            ax.set_title(f"$\\lambda$={c['lam']:g}, $\\rho$={c['rho']:g}  "
-                         f"{'dilemma' if v['dilemma'] else 'no dilemma'}", fontsize=9)
+            for key0, key1, colour, marker, label in (("Rc0", "Rc1", "#2d69be", "o", "restrained $R_c$"),
+                                                      ("Rd0", "Rd1", "#d9534f", "s", "greedy $R_d$")):
+                means = [v[key0][0], v[key1][0]]
+                err = [[means[0] - v[key0][1], means[1] - v[key1][1]],
+                       [v[key0][2] - means[0], v[key1][2] - means[1]]]
+                ax.errorbar([0, 1], means, yerr=err, color=colour, marker=marker, lw=2,
+                            capsize=4, label=label)
+            d = v["Delta"]
+            ax.set_title(f"$\\lambda$={c['lam']:g}, $\\rho$={c['rho']:g}   dilemma: {v['dilemma']}\n"
+                         f"$\\Delta$ = {d[0]:+.3f} [{d[1]:+.3f}, {d[2]:+.3f}]", fontsize=8.5)
             ax.set_xticks([0, 1])
             ax.set_xticklabels(["greedy\npartner", "teacher\n$\\rho$"], fontsize=8)
             ax.grid(alpha=0.3)
         axes[0][0].legend(fontsize=7)
-        fig.suptitle(f"Schelling diagrams, student's return: {m}"
-                     f"{' (PRIMARY)' if m == PRIMARY else ''}, gamma={args.gamma}", fontsize=10)
+        fig.suptitle(f"Schelling diagrams (student's return: {m}"
+                     f"{', PRIMARY' if m == PRIMARY else ''}; gamma = {args.gamma}; "
+                     f"{args.seeds} seeds; error bars: 95% CI)", fontsize=10)
         fig.tight_layout()
         fig.savefig(out / f"schelling_{m}.png", dpi=130)
         plt.close(fig)

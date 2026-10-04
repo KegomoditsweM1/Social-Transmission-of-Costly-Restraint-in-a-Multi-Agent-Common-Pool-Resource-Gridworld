@@ -65,3 +65,26 @@ def test_discounted_returns_match_hand_calculation():
     assert r["undiscounted"] == 2.0
     assert np.isclose(r["disc_start"], 1.125)
     assert np.isclose(r["disc_avg"], (1.125 + 0.25 + 0.5 + 1.0) / 4)
+
+
+def test_dilemma_classification_distinguishes_no_from_unclear():
+    import sys
+    sys.path.insert(0, "scripts")
+    from check_gate import classify
+    assert classify("yes", "yes", "yes", "no") == "yes"        # fear-only dilemma
+    assert classify("yes", "yes", "no", "yes") == "yes"        # greed-only dilemma
+    assert classify("yes", "yes", "unclear", "no") == "unclear"  # not established, NOT ruled out
+    assert classify("no", "yes", "yes", "yes") == "no"         # mutual restraint does not beat mutual greed
+    assert classify("yes", "yes", "no", "no") == "no"          # no temptation at all
+
+
+def test_dilemma_classification_distinguishes_no_from_unclear():
+    import sys
+    sys.path.insert(0, "scripts")
+    from check_gate import classify
+    assert classify("yes", "yes", "yes", "no") == "yes"        # fear-only dilemma
+    assert classify("yes", "yes", "no", "yes") == "yes"        # greed-only dilemma
+    assert classify("yes", "yes", "unclear", "no") == "unclear"  # not established, NOT "no"
+    assert classify("no", "yes", "yes", "yes") == "no"         # condition (1) ruled out
+    assert classify("yes", "yes", "no", "no") == "no"          # both temptations ruled out
+    assert classify("unclear", "yes", "yes", "yes") == "unclear"
