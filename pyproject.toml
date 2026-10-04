@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "restraint-study"
+version = "0.1.0"
+description = "Social transmission of costly restraint in a common-pool resource gridworld"
+requires-python = ">=3.11"
+dependencies = ["pettingzoo==1.27.0", "gymnasium==1.3.0", "numpy>=1.26"]
+
+[tool.setuptools]
+packages = ["commons_env"]
+
+[tool.pytest.ini_options]
+# Silence two KNOWN warnings raised inside third-party libraries, not by this
+# project. Filters match the exact message, so any new warning still shows.
+filterwarnings = [
+    "ignore:The old environment creation API has been deprecated:DeprecationWarning",
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+]

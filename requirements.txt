@@ -1,0 +1,9 @@
+# Exact versions used to build and test this environment (Python 3.12.3, Linux).
+pettingzoo==1.27.0
+gymnasium==1.3.0
+numpy==2.4.4
+pytest==9.1.1
+# Figures (scripts/plot_schelling.py and later analysis).
+matplotlib==3.10.8
+# Graphical viewer only (scripts/view.py); not needed for experiments.
+pygame==2.6.1
