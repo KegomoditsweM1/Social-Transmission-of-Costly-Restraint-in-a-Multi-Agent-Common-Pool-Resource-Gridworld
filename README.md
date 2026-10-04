@@ -109,7 +109,8 @@ is adjacent. **Teacher levels** mix them there:
 so the teacher takes an adjacent last apple with probability $`1-\rho`$ at each
 step. Because taking an apple changes later opportunities, the nominal $`\rho`$
 is not the realised restraint rate; the realised rate is **measured** and used
-as the teacher's level.
+as the teacher's level. Because a learner trained alone does not learn
+restraint (see Results), the teacher's restrained policy is the scripted $`\pi_R`$.
 
 ### The learner
 
@@ -231,38 +232,83 @@ is the teacher's own restraint. $`\mathrm{CT} = 1`$ means the student matched th
 ### The environment is a social dilemma where it should be
 
 Scripted restrained and greedy students were paired with a greedy partner and
-with the teacher at each level, 50 seeds per pairing (200 seeds for the
-uncertain $`\lambda = 1`$ comparison). Primary measure: discounted, averaged returns.
+with the teacher at each level, with **200 seeds per pairing**. Returns are
+measured as the learner experiences them (discounted with $`\gamma = 0.99`$,
+averaged over all steps). A condition counts only when its 95% interval
+excludes zero.
 
-| $`\lambda`$ | Social dilemma? | Greed gap $`\Delta`$ (fully restrained teacher) | What it means for the student |
+| $`\lambda`$ | Social dilemma? | Greed gap $`\Delta`$ [95% CI], teacher level $`\rho = 0.5`$ | $`\rho = 0.75`$ | $`\rho = 1`$ |
+|---|---|---|---|---|
+| 0 | no | $`+0.97\ [0.93, 1.01]`$ | $`+0.95\ [0.91, 0.99]`$ | $`+0.94\ [0.90, 0.98]`$ |
+| $`\tfrac12`$ | **yes** (fear and greed), at every level | $`+0.27\ [0.24, 0.29]`$ | $`+0.24\ [0.22, 0.27]`$ | $`+0.18\ [0.15, 0.20]`$ |
+| 1 | **yes** (fear only), at every level | $`-0.32\ [-0.34, -0.30]`$ | $`-0.37\ [-0.39, -0.35]`$ | $`-0.63\ [-0.66, -0.60]`$ |
+
+- **$`\lambda = 0`$** is the control: restraint costs the student reward and protects nothing.
+- **$`\lambda = \tfrac12`$** is the core condition: restraint is both **individually
+  costly** ($`\Delta > 0`$) and **collectively valuable** (a social dilemma), at
+  every teacher level.
+- **$`\lambda = 1`$** is a dilemma only through fear; beside the teacher,
+  restraint **pays** the student ($`\Delta < 0`$).
+- At $`\lambda = \tfrac12`$ the cost of restraint **falls as the teacher becomes
+  more restrained**: a restrained teacher keeps patches alive, so restraint
+  costs the student less. Teacher level and cost are therefore linked, and
+  transmission is analysed against the measured $`\Delta`$ of each condition.
+- Measured from the start of an episode instead, no setting is a dilemma:
+  within the learner's horizon from the start, restraint never pays back.
+
+![Schelling diagrams with 95% confidence intervals](results/gate_200seeds/schelling_disc_avg.png)
+
+### A lone learner does not learn restraint
+
+A Q-learner trained alone at $`\lambda = 1`$ ended up no more restrained than a
+greedy agent, in all three seeds, even though restraint doubles a lone agent's
+harvest:
+
+| | Restraint per encounter | Return |
+|---|---|---|
+| learner, seed 0 | 0.03 | 22.9 |
+| learner, seed 1 | 0.00 | 21.3 |
+| learner, seed 2 | 0.78 | 20.3 |
+| scripted greedy $`\pi_G`$ | 0.00 | 20.2 |
+| scripted restrained $`\pi_R`$ | 1.00 | 41.0 |
+
+Seed 2's high rate is misleading on its own: it repeatedly walks up to last
+apples and leaves, but still takes about three per episode, and its return is
+no better than greedy. This is why restraint is always read together with the
+apples actually taken and the return.
+
+The environment is not at fault: restraint doubles the harvest, and averaged
+over the states the learner visits, its own discounted objective favours
+restraint. But the reward for taking a last apple is immediate, while its cost
+arrives hundreds of steps later, and the learner's state does not reveal how
+far into the episode it is. **Restraint is profitable but hard to learn alone**,
+which is exactly the situation in which a teacher could help. The teacher in
+the experiments is therefore the scripted restrained policy $`\pi_R`$.
+
+### The three teacher levels
+
+Measured alone at $`\lambda = 1`$ over 50 episodes:
+
+| Teacher level $`\rho`$ | Restraint per encounter [95% CI] | Last apples taken per episode | All patches died |
 |---|---|---|---|
-| 0 | no | $`+0.96`$ | restraint costs reward and protects nothing |
-| $`\tfrac12`$ | **yes**, at every teacher level | $`+0.17`$ to $`+0.30`$ | restraint is **costly and collectively valuable** |
-| 1 | yes, weakly (fear only) | $`-0.65`$ | beside a restrained teacher, restraint **pays** |
+| 0.5 | 0.25 [0.20, 0.29] | 3.60 | 62% |
+| 0.75 | 0.43 [0.37, 0.48] | 3.54 | 58% |
+| 1 | 1.00 [1.00, 1.00] | 0.00 | 0% |
 
-The cost of restraint therefore ranges from clearly positive to clearly
-negative across the settings, and $`\lambda = \tfrac12`$ is the condition in which
-restraint is both individually costly and socially valuable. Discounted from
-the start of the episode, no setting is a dilemma: within the learner's
-horizon from the start, restraint never pays back.
-
-![Schelling diagrams](results/gate/schelling_disc_avg.png)
-
-### Next results
-
-The teacher's three restraint levels, and then the students' learning, are in
-progress; see the roadmap below.
-
----
+The levels are clearly distinct. The realised restraint is well below the
+nominal $`\rho`$, because the teacher draws at **every step** a last apple is
+adjacent, and often waits beside one for several steps. The measured rates,
+not $`\rho`$, are the teacher levels. Even 43% restraint destroys the resource
+in most episodes: at $`\lambda = 1`$ a single lapse kills a patch for good.
 
 ## Project status
 
 | Stage | Contents | Status |
 |---|---|---|
-| Environment | gridworld, scripted policies, dilemma validation | complete |
-| Teacher | tabular Q-learner, teacher training, three measured teacher levels | in progress |
-| Students | asocial, value shaping, decision biasing; pilot | planned |
-| Evaluation | CT metric, persistence after the teacher is removed, partner tests, analysis | planned |
+| Environment | gridworld, scripted policies, social-dilemma validation | ✅ complete |
+| Teacher | tabular Q-learner, teacher training, three measured teacher levels | ✅ complete |
+| Students | asocial, value shaping, decision biasing; parameter selection; pilot | ⬜ next |
+| Evaluation | transmission, persistence after the teacher is removed, partner tests, analysis | ⬜ planned |
 
 ---
 
