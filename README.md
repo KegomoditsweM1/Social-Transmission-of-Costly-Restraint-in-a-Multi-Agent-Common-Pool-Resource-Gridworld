@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Social transmission of costly restraint — Phase 0: environment and gate
 
 Code for the research proposal *Social Transmission of Costly Restraint in a
@@ -121,3 +122,6 @@ If it fails, the episode length and p̄ may be changed (`--max-steps`,
 ## Next phase
 
 Phase 1 (the teacher) starts once the gate passes with 50 seeds.
+=======
+# Social-Transmission-of-Costly-Restraint-in-a-Multi-Agent-Common-Pool-Resource-Gridworld
+>>>>>>> 254e1e4a62e638346b733b3312a5cafe66b3c6e0

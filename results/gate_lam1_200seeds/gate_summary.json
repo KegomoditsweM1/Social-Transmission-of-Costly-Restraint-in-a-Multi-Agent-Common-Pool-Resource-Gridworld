@@ -1,0 +1,77 @@
+{
+  "settings": {
+    "seeds": 200,
+    "lams": [
+      1.0
+    ],
+    "rhos": [
+      1.0
+    ],
+    "max_steps": 1500,
+    "p_bar": 0.001,
+    "gamma": 0.99,
+    "workers": 3,
+    "out_dir": "results/gate_lam1_200seeds"
+  },
+  "conditions": [
+    {
+      "lam": 1.0,
+      "rho": 1.0,
+      "disc_avg": {
+        "Rc1": 0.7357526762193092,
+        "Rd1": 0.10338713675373871,
+        "Rc0": 0.065338007158212,
+        "Rd0": 0.07178020485055175,
+        "Delta": [
+          -0.6323655394655704,
+          -0.6593282267319366,
+          -0.6043672560405079
+        ],
+        "cond1": "yes",
+        "cond2": "yes",
+        "fear": "yes",
+        "greed": "no",
+        "dilemma": true
+      },
+      "undiscounted": {
+        "Rc1": 18.89,
+        "Rd1": 11.575,
+        "Rc0": 8.785,
+        "Rd0": 10.12,
+        "Delta": [
+          -7.315,
+          -7.82,
+          -6.815
+        ],
+        "cond1": "yes",
+        "cond2": "yes",
+        "fear": "yes",
+        "greed": "no",
+        "dilemma": true
+      },
+      "disc_start": {
+        "Rc1": 7.933040259303386,
+        "Rd1": 10.12544742292315,
+        "Rc0": 7.883767568309919,
+        "Rd0": 9.134643360850225,
+        "Delta": [
+          2.192407163619763,
+          1.9277634264669954,
+          2.4587608387597046
+        ],
+        "cond1": "no",
+        "cond2": "unclear",
+        "fear": "yes",
+        "greed": "yes",
+        "dilemma": false
+      }
+    }
+  ],
+  "gate": {
+    "A_dilemma_at_lambda_gt_0_rho_1": true,
+    "B_no_dilemma_at_lambda_0": null,
+    "C_Delta_gt_0_any_condition": false,
+    "C_Delta_gt_0_some_lambda_gt_0": false,
+    "passes": false
+  }
+}
