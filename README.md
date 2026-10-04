@@ -53,36 +53,36 @@ A two-agent gridworld written to the [PettingZoo](https://pettingzoo.farama.org/
 Parallel API, in the style of the *Commons Harvest* family of sequential social
 dilemmas.
 
-- **Grid:** $10 \times 10$ cells with four apple patches of five cells each.
+- **Grid:** $`10 \times 10`$ cells with four apple patches of five cells each.
 - **Actions:** move up, down, left or right, or stay. Moves that would leave the
   grid are unavailable.
-- **Reward:** $+1$ for moving onto an apple, which is then harvested.
-- **Episodes:** a fixed length of $T = 1500$ steps.
+- **Reward:** $`+1`$ for moving onto an apple, which is then harvested.
+- **Episodes:** a fixed length of $`T = 1500`$ steps.
 - **Observation:** each agent sees apples within a radius of 4 cells, but
   observes the other agent's position and last action only within a radius
   of 2. The student must stay near the teacher to learn from it.
 
-### Regrowth and the dilemma parameter $\lambda$
+### Regrowth and the dilemma parameter $`\lambda`$
 
 At every step, each empty patch cell regrows an apple with probability
 
-$$
+```math
 p(n;\lambda) = (1-\lambda)\,\bar p + \lambda\, p_{\mathrm{SJ}}(n),
-$$
+```
 
-where $n$ is the number of apples within a radius of two cells, $\bar p = 0.001$
-is a constant rate, and $p_{\mathrm{SJ}}$ is the Commons Harvest regrowth rule:
+where $`n`$ is the number of apples within a radius of two cells, $`\bar p = 0.001`$
+is a constant rate, and $`p_{\mathrm{SJ}}`$ is the Commons Harvest regrowth rule:
 
-| $n$ | 0 | 1 | 2 | $\ge 3$ |
+| $`n`$ | 0 | 1 | 2 | $`\ge 3`$ |
 |---|---|---|---|---|
-| $p_{\mathrm{SJ}}(n)$ | 0 | 0.001 | 0.005 | 0.025 |
+| $`p_{\mathrm{SJ}}(n)`$ | 0 | 0.001 | 0.005 | 0.025 |
 
-- At $\lambda = 0$, regrowth ignores the remaining stock: leaving an apple
+- At $`\lambda = 0`$, regrowth ignores the remaining stock: leaving an apple
   protects nothing, so restraint is **pointless** (the no-dilemma control).
-- At $\lambda = 1$, a patch with no apples left **never regrows**.
-- $\lambda = \tfrac12$ lies between the two.
+- At $`\lambda = 1`$, a patch with no apples left **never regrows**.
+- $`\lambda = \tfrac12`$ lies between the two.
 
-The experiments use $\lambda \in \{0, \tfrac12, 1\}$.
+The experiments use $`\lambda \in \{0, \tfrac12, 1\}`$.
 
 ### Restraint
 
@@ -96,37 +96,37 @@ depletion, not about harvesting as little as possible.
 
 ### Scripted policies
 
-- **Restrained** $\pi_R$: heads for the nearest apple but never takes a last apple.
-- **Greedy** $\pi_G$: heads for the nearest apple and takes any apple, including last apples.
+- **Restrained** $`\pi_R`$: heads for the nearest apple but never takes a last apple.
+- **Greedy** $`\pi_G`$: heads for the nearest apple and takes any apple, including last apples.
 
 The two differ only at a **restraint opportunity**, a step at which a last apple
 is adjacent. **Teacher levels** mix them there:
 
-$$
-\pi_T^{\rho} = \rho\,\pi_R + (1-\rho)\,\pi_G, \qquad \rho \in \{0.5,\ 0.75,\ 1\},
-$$
+```math
+\pi_T^{\rho} = \rho\pi_R + (1-\rho)\pi_G, \qquad \rho \in \{0.5,\ 0.75,\ 1\},
+```
 
-so the teacher takes an adjacent last apple with probability $1-\rho$ at each
-step. Because taking an apple changes later opportunities, the nominal $\rho$
+so the teacher takes an adjacent last apple with probability $`1-\rho`$ at each
+step. Because taking an apple changes later opportunities, the nominal $`\rho`$
 is not the realised restraint rate; the realised rate is **measured** and used
 as the teacher's level.
 
 ### The learner
 
-A tabular Q-learner with learning rate $\alpha$ and discount factor $\gamma$:
+A tabular Q-learner with learning rate $`\alpha`$ and discount factor $`\gamma`$:
 
-$$
+```math
 Q(s,a) \leftarrow Q(s,a) + \alpha \Big[ r + \gamma \max_{a'} Q(s',a') - Q(s,a) \Big],
-$$
+```
 
-acting through a softmax policy with inverse temperature $\beta$:
+acting through a softmax policy with inverse temperature $`\beta`$:
 
-$$
-\pi(a \mid s) = \frac{\exp\!\big(\beta\, Q(s,a)\big)}{\sum_{b} \exp\!\big(\beta\, Q(s,b)\big)}.
-$$
+```math
+\pi(a \mid s) = \frac{\exp\big(\beta Q(s,a)\big)}{\sum_{b} \exp\big(\beta Q(s,b)\big)}.
+```
 
 Episodes end by truncation, so the update always bootstraps from the next
-state. Default settings: $\alpha = 0.1$, $\gamma = 0.99$, $\beta = 5$, initial values $Q = 1$.
+state. Default settings: $`\alpha = 0.1`$, $`\gamma = 0.99`$, $`\beta = 5`$, initial values $`Q = 1`$.
 
 The learner's state is a compact summary of what it sees (90 states):
 
@@ -140,19 +140,19 @@ The learner's state is a compact summary of what it sees (90 states):
 
 Two non-inferential mechanisms let the student use what it observes.
 
-**Value shaping** raises the value of each state-action pair $(s_e, a_e)$ the
+**Value shaping** raises the value of each state-action pair $`(s_e, a_e)`$ the
 teacher is observed to take:
 
-$$
+```math
 Q(s_e, a_e) \leftarrow Q(s_e, a_e) + \kappa.
-$$
+```
 
 **Decision biasing** mixes the student's own policy with a social policy that
 moves towards the teacher's last observed position:
 
-$$
+```math
 \pi_{\mathrm{DB}} = (1-\omega)\,\pi_{\mathrm{asoc}} + \omega\,\pi_{\mathrm{soc}}.
-$$
+```
 
 An **asocial** student, which ignores the teacher, is the control.
 
@@ -164,11 +164,11 @@ An **asocial** student, which ignores the teacher, is the control.
 
 A restraint opportunity is an **encounter**: the agent arrives next to a last
 apple it was not next to on the previous step. Waiting beside the same apple is
-one decision, however long it lasts. For agent $i$,
+one decision, however long it lasts. For agent $`i`$,
 
-$$
+```math
 \mathrm{Res}_i = 1 - \frac{\text{last apples taken by } i}{\text{encounters of } i},
-$$
+```
 
 excluding encounters ended by the other agent taking the apple first. A
 per-step variant, counting every step spent beside a last apple, is reported as
@@ -181,30 +181,30 @@ which no individual restraint measure records.
 
 ### Is it a social dilemma? The cost of restraint
 
-With $R_c(\ell)$ and $R_d(\ell)$ the student's return when it restrains or is
-greedy and $\ell \in \{0,1\}$ other agents restrain, the game is a **social
+With $`R_c(\ell)`$ and $`R_d(\ell)`$ the student's return when it restrains or is
+greedy and $`\ell \in \{0,1\}`$ other agents restrain, the game is a **social
 dilemma** if
 
-$$
+```math
 R_c(1) > R_d(0), \qquad R_c(1) > R_c(0),
-$$
+```
 
-and at least one temptation holds: **fear**, $R_d(0) > R_c(0)$, or **greed**,
-$R_d(1) > R_c(1)$. The **cost of restraint** is the greed gap
+and at least one temptation holds: **fear**, $`R_d(0) > R_c(0)`$, or **greed**,
+$`R_d(1) > R_c(1)`$. The **cost of restraint** is the greed gap
 
-$$
-\Delta = R_d(1) - R_c(1):
-$$
+```math
+\Delta = R_d(1) - R_c(1)
+```
 
-the extra return a student gets by taking last apples while its teacher
-restrains. Restraint is individually costly exactly when $\Delta > 0$.
+This is the extra return a student gets by taking last apples while its teacher
+restrains. Restraint is individually costly exactly when $`\Delta > 0`$.
 
 Returns are measured as the student experiences them: discounted with its own
-$\gamma$, from **every** step of the episode, and averaged,
+$`\gamma`$, from **every** step of the episode, and averaged,
 
-$$
+```math
 \bar G = \frac{1}{T}\sum_{t=0}^{T-1} G_t, \qquad G_t = \sum_{k \ge 0} \gamma^{k}\, r_{t+k+1},
-$$
+```
 
 since the learner values every state it visits, not only the first.
 Undiscounted returns and returns discounted from the start of the episode are
@@ -215,14 +215,14 @@ also reported.
 Transmission is measured with the **cultural transmission** metric, applied to
 restraint:
 
-$$
+```math
 \mathrm{CT} = \frac{1}{2}\,\frac{A_{\mathrm{full}} - A_{\mathrm{solo}}}{E} + \frac{1}{2}\,\frac{A_{\mathrm{half}} - A_{\mathrm{solo}}}{E},
-$$
+```
 
-where $A_{\mathrm{full}}$, $A_{\mathrm{half}}$ and $A_{\mathrm{solo}}$ are the
+where $`A_{\mathrm{full}}`$, $`A_{\mathrm{half}}`$ and $`A_{\mathrm{solo}}`$ are the
 student's restraint with the teacher observable throughout, observable for the
-first half of each episode, and never observable (the asocial student), and $E$
-is the teacher's own restraint. $\mathrm{CT} = 1$ means the student matched the teacher.
+first half of each episode, and never observable (the asocial student), and $`E`$
+is the teacher's own restraint. $`\mathrm{CT} = 1`$ means the student matched the teacher.
 
 ---
 
@@ -232,16 +232,16 @@ is the teacher's own restraint. $\mathrm{CT} = 1$ means the student matched the 
 
 Scripted restrained and greedy students were paired with a greedy partner and
 with the teacher at each level, 50 seeds per pairing (200 seeds for the
-uncertain $\lambda = 1$ comparison). Primary measure: discounted, averaged returns.
+uncertain $`\lambda = 1`$ comparison). Primary measure: discounted, averaged returns.
 
-| $\lambda$ | Social dilemma? | Greed gap $\Delta$ (fully restrained teacher) | What it means for the student |
+| $`\lambda`$ | Social dilemma? | Greed gap $`\Delta`$ (fully restrained teacher) | What it means for the student |
 |---|---|---|---|
-| 0 | no | $+0.96$ | restraint costs reward and protects nothing |
-| $\tfrac12$ | **yes**, at every teacher level | $+0.17$ to $+0.30$ | restraint is **costly and collectively valuable** |
-| 1 | yes, weakly (fear only) | $-0.65$ | beside a restrained teacher, restraint **pays** |
+| 0 | no | $`+0.96`$ | restraint costs reward and protects nothing |
+| $`\tfrac12`$ | **yes**, at every teacher level | $`+0.17`$ to $`+0.30`$ | restraint is **costly and collectively valuable** |
+| 1 | yes, weakly (fear only) | $`-0.65`$ | beside a restrained teacher, restraint **pays** |
 
 The cost of restraint therefore ranges from clearly positive to clearly
-negative across the settings, and $\lambda = \tfrac12$ is the condition in which
+negative across the settings, and $`\lambda = \tfrac12`$ is the condition in which
 restraint is both individually costly and socially valuable. Discounted from
 the start of the episode, no setting is a dilemma: within the learner's
 horizon from the start, restraint never pays back.
@@ -335,7 +335,7 @@ Controls: SPACE pause, RIGHT one step, UP/DOWN speed, R new episode, S screensho
 python scripts/check_gate.py --seeds 50
 ```
 
-**Train a teacher** alone at $\lambda = 1$ and check whether it is reliably restrained:
+**Train a teacher** alone at $`\lambda = 1`$ and check whether it is reliably restrained:
 
 ```bash
 python scripts/train_teacher.py --seed 0
