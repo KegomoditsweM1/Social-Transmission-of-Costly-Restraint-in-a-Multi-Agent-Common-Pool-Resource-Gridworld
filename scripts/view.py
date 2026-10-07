@@ -9,8 +9,8 @@ Draws the environment in the style of Figure 2 of the proposal:
   * a dashed line when the student can observe the teacher (social channel)
   * "+1" when an agent harvests; a side panel with live statistics
 
-Both agents are SCRIPTED (Phase 0): you are watching the environment's rules,
-not learning. --teacher mixed uses the teacher level rho of Eq. 9.
+By default both agents are SCRIPTED. With --student-q a TRAINED student is
+loaded from its saved Q-table and acts on its learned values (as in evaluation).
 A single episode is illustration, not evidence.
 
 Controls:
@@ -39,6 +39,21 @@ from commons_env.env import DOWN, LEFT, RIGHT, UP
 from commons_env.metrics import restraint_rate
 from commons_env.scripted import GreedyPolicy, TeacherPolicy, RandomPolicy, RestrainedPolicy
 
+
+class LearnedPolicy:
+    """A TRAINED student loaded from a saved Q-table (.npz). It acts greedily
+    (exploration off), exactly as in the frozen evaluation, unless explore=True."""
+
+    def __init__(self, path, explore=False, seed=0, wall_mask=True):
+        from agents.q_learner import QLearner
+        self.q = QLearner.load(path, seed=seed)
+        self.q.freeze()
+        self.explore, self.wall_mask = explore, wall_mask
+
+    def act_from_obs(self, obs, env, agent):
+        from agents.features import state_of, valid_actions
+        mask = valid_actions(obs["window"]) if self.wall_mask else None
+        return self.q.act(state_of(obs, (env.height, env.width)), greedy=not self.explore, mask=mask)
 
 # --------------------------------------------------------------------------- #
 # Look and feel
@@ -267,6 +282,13 @@ def main():
     ap.add_argument("--teacher", default="restrained", choices=["restrained", "greedy", "mixed", "random"])
     ap.add_argument("--student", default="greedy", choices=["restrained", "greedy", "mixed", "random"])
     ap.add_argument("--rho", type=float, default=0.75, help="restraint probability for 'mixed'")
+    ap.add_argument("--student-q", default=None,
+                    help="path to a TRAINED student's Q-table (.npz); replaces the scripted student")
+    ap.add_argument("--explore", action="store_true", help="trained student explores (softmax) instead of greedy")
+    ap.add_argument("--no-wall-mask", dest="wall_mask", action="store_false",
+                    help="for students trained without the wall mask")
+    ap.add_argument("--social", action="store_true",
+                    help="show the social channel as on (value-shaping students were trained with it on)")
     ap.add_argument("--screenshot", default=None, help="save one frame to this file, then exit")
     ap.add_argument("--screenshot-step", type=int, default=1, help="step at which --screenshot is taken")
     args = ap.parse_args()
@@ -278,7 +300,8 @@ def main():
     labels = {"teacher": "T", "student": "S"}
     descr = {
         "teacher": f"teacher: {args.teacher}" + (f" (rho={args.rho})" if args.teacher == "mixed" else ""),
-        "student": f"student: {args.student} (scripted)",
+        "student": ("student: TRAINED (loaded)" if args.student_q
+                    else f"student: {args.student} (scripted)"),
     }
     viewer = Viewer(env, labels, descr)
     clock = pygame.time.Clock()
@@ -289,8 +312,11 @@ def main():
     def new_episode(sd):
         pols = {
             "teacher": make_policy(args.teacher, args.rho, 1000 + sd),
-            "student": make_policy(args.student, args.rho, 2000 + sd),
+            "student": (LearnedPolicy(args.student_q, explore=args.explore, seed=sd, wall_mask=args.wall_mask) if args.student_q
+                        else make_policy(args.student, args.rho, 2000 + sd)),
         }
+        if args.student_q:
+            env.set_social_channel("student", args.social)
         obs, infos = env.reset(seed=sd)
         return pols, obs, infos
 
@@ -325,7 +351,8 @@ def main():
                     print(f"saved {path}")
 
         if not done and (not paused or step_once):
-            actions = {a: pols[a].act(env, a) for a in env.agents}
+            actions = {a: (pols[a].act_from_obs(obs[a], env, a) if hasattr(pols[a], "act_from_obs")
+                           else pols[a].act(env, a)) for a in env.agents}
             obs, _, _, _, infos = env.step(actions)
             done = not env.agents
 

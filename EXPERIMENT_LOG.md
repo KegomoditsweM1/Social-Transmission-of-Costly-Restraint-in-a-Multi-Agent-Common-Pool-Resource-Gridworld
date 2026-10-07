@@ -260,3 +260,30 @@ Format: date, what and why, exact command, result, decision.
     against the measured Δ of every condition makes this visible.
 - **Settings confirmed:** T = 1500, p̄ = 0.001, γ = 0.99. Phase 1 results are
   unaffected (same environment and settings).
+
+## 2026-10-04 — E8: Phase 2 built (students, batch runs, parameter selection)
+
+- **What:** `agents/social.py` (value shaping: κ added to Q(s_e, a_e) each time
+  the teacher is observed acting, with the teacher's state reconstructed from
+  the student's own view, unseen cells treated as empty; decision biasing: with
+  probability ω, move towards the teacher's last observed position in the
+  episode), `scripts/train_student.py` (asocial / value_shaping /
+  decision_biasing beside the scripted teacher π_T^ρ; evaluation with the ε rule),
+  `scripts/run_batch.py` (parallel, resumable; several κ, ω, λ, ρ and seeds at
+  once), `scripts/summarise_students.py` (results across seeds; groups by every
+  setting), `scripts/select_social_param.py`, and the viewer can load a trained
+  student (`--student-q`).
+- **Rule for choosing κ and ω, fixed BEFORE any selection run**
+  (`select_social_param.py`): selection at λ = 0 with ρ = 1 on seeds 100–102,
+  which are not reused in the main runs. With A the mean restraint per
+  encounter, A_solo that of asocial students on the same seeds and E = 1,
+  f = (A − A_solo)/(E − A_solo). Partial if 0.25 ≤ f ≤ 0.75; choose the partial
+  value with f closest to 0.5; sensitivity value = its scanned neighbour. If no
+  value is partial, choose the value closest to the partial range and REPORT
+  that transmission was never partial.
+- **Scan values:** κ ∈ {0.003, 0.01, 0.03, 0.1} (log-spaced), ω ∈ {0.1, 0.3, 0.5}.
+- **Checks:** `python -m pytest -q` → 57 passed (8 new, including the selection
+  rule on synthetic data with a known answer). End-to-end smoke run of every
+  condition (3 training episodes; numbers not meaningful).
+- **Next:** E9 parameter selection; E10 pilot (asocial vs value shaping at
+  λ ∈ {0, ½, 1}, ρ = 1, seeds 0–2; λ = ½ added in E6).
