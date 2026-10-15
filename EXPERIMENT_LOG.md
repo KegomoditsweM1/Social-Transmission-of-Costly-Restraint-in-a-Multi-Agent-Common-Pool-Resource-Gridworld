@@ -371,3 +371,64 @@ Format: date, what and why, exact command, result, decision.
 - **Next:** inspect a value-shaping student with the viewer; depending on the
   answer, add a stationarity measure for the teacher and student before the
   decision-biasing pilot and the full design.
+- **Addendum, viewer check** (seed 0, λ = ½, first 600 steps, greedy student;
+  illustration only): from step 16 the only apples left are the 4 protected
+  ones (550 of 600 steps); teacher still 92% of steps (longest spell 145),
+  student 94% (longest 280); the student is beside a protected apple for only
+  42 steps, the teacher for 216. The scripted teacher π_R stays still by
+  design whenever no harvestable apple exists, and value shaping rewards the
+  student for copying the teacher's actions, including STAY. During
+  evaluation the 5% random moves are disabled next to a protected apple, so a
+  student whose greedy action there is STAY cannot be nudged away until the
+  state changes; this may explain the high per-step counts. To confirm over
+  all pilot seeds with scripts/stillness_check.py (teacher and student
+  stillness, stillness with food in view, steps with nothing to harvest).
+
+## 2026-10-15 — E11: stillness check (are value-shaping students passive?)
+
+- **Why:** E10 found that value-shaping students spend about half of all
+  evaluation steps beside a protected apple and stand still for long spells.
+  The question was whether this is passivity caused by the bonus, or copied
+  waiting (the scripted teacher π_R stays still by design whenever no
+  harvestable apple exists).
+- **Tool:** new `scripts/stillness_check.py` replays the frozen evaluation of
+  every saved student (same 50 evaluation seeds and settings, learning off) and
+  measures teacher and student stillness side by side.
+- **Command:** `python scripts/stillness_check.py results/pilot`
+  (output: `results/pilot/stillness_check.csv`)
+- **Result** (means over seeds 0–2; teacher / student; % of steps):
+
+  | condition | λ | nothing to harvest | still | still with food in view | still beside protected apple | longest still spell beside (steps) |
+  |---|---|---|---|---|---|---|
+  | asocial | 0 | 91.7 | 96.4 / 22.0 | 4.4 / 0.1 | 17.7 / 0.0 | 160 / 0 |
+  | asocial | ½ | 93.4 | 96.9 / 35.7 | 3.3 / 0.2 | 13.4 / 0.0 | 123 / 0 |
+  | asocial | 1 | 93.0 | 96.6 / 57.3 | 3.4 / 0.1 | 21.8 / 0.0 | 220 / 0 |
+  | value shaping κ = 0.03 | 0 | 88.1 | 93.4 / 80.0 | 3.3 / 0.3 | 28.0 / 49.1 | 196 / 358 |
+  | value shaping κ = 0.03 | ½ | 85.7 | 93.4 / 88.1 | 6.5 / 0.6 | 29.8 / 41.9 | 227 / 359 |
+  | value shaping κ = 0.03 | 1 | 90.3 | 94.5 / 88.0 | 3.7 / 0.6 | 25.5 / 41.1 | 217 / 335 |
+
+  Re-measured student restraint matches the original evaluations
+  (asocial 0.044 / 0.017 / 0.027 vs 0.024 / 0.018 / 0.028; value shaping
+  0.834 / 0.671 / 0.758 vs 0.788 / 0.656 / 0.784); small differences because
+  the teacher's random stream is not saved.
+- **Conclusions:**
+  - **Not passive.** Value-shaping students almost never stand still with a
+    harvestable apple in view (0.3–0.6% of steps; the teacher 3.3–6.5%).
+  - Most stillness is the world, not the student: nothing is harvestable for
+    86–93% of steps in every condition, and the teacher is still more often
+    (93–97%) than any student.
+  - The difference from the teacher is *where* students wait: beside a
+    protected apple for 41–49% of steps (teacher 26–30%), with spells of about
+    335–360 steps. Two likely reasons: at λ > 0 new apples grow only next to
+    surviving apples, so waiting beside the last apple is a sensible foraging
+    strategy for a learner that cannot see the whole grid (the privileged
+    teacher can); and evaluation disables random moves at restraint decisions
+    (correctly, so a random move never counts as taking or leaving an apple),
+    which lengthens these waits.
+  - Consequences: per-step restraint (≈ 0.997) is inflated by this waiting,
+    confirming per-encounter restraint as the primary measure (E8). The
+    students' loss of return reflects the last apples left, not missed food.
+  - Report wording: transmitted restraint takes the form of waiting beside the
+    last apple; students do not forgo visible harvestable apples.
+- **Next:** decision-biasing pilot (ω = 0.5) at λ ∈ {0, ½, 1}, ρ = 1, seeds 0–2,
+  reusing the E10 asocial students; then Phase 3.
