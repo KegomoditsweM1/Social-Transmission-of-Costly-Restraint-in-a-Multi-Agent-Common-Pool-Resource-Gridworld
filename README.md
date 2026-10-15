@@ -305,10 +305,10 @@ in most episodes: at $`\lambda = 1`$ a single lapse kills a patch for good.
 
 | Stage | Contents | Status |
 |---|---|---|
-| Environment | gridworld, scripted policies, social-dilemma validation | ✅ complete |
-| Teacher | tabular Q-learner, teacher training, three measured teacher levels | ✅ complete |
-| Students | asocial, value shaping, decision biasing; parameter selection; pilot | ⬜ next |
-| Evaluation | transmission, persistence after the teacher is removed, partner tests, analysis | ⬜ planned |
+| Environment | gridworld, scripted policies, social-dilemma validation | complete |
+| Teacher | tabular Q-learner, teacher training, three measured teacher levels | complete |
+| Students | asocial, value shaping, decision biasing; parameter selection; pilot | next |
+| Evaluation | transmission, persistence after the teacher is removed, partner tests, analysis | planned |
 
 ---
 
