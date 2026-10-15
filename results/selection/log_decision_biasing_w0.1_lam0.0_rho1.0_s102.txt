@@ -1,0 +1,31 @@
+[decision_biasing_w0.1_lam0.0_rho1.0_s102] ep    1  student return  16.85  restraint 0.32  teacher return  25.80  collective  42.65  (18s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s102] ep  100  student return  31.45  restraint 0.14  teacher return  13.90  collective  45.35  (120s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s102] ep  200  student return  32.50  restraint 0.08  teacher return  12.50  collective  45.00  (218s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s102] ep  300  student return  19.85  restraint 0.08  teacher return  22.20  collective  42.05  (316s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s102] ep  400  student return  20.05  restraint 0.07  teacher return  21.65  collective  41.70  (69055s)
+Traceback (most recent call last):
+  File "C:\dev\marl\restraint_study\scripts\train_student.py", line 146, in <module>
+    main()
+    ~~~~^^
+  File "C:\dev\marl\restraint_study\scripts\train_student.py", line 117, in main
+    run_episode(env, ctrl, seed=args.seed * 100_000 + ep, learn=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dev\marl\restraint_study\agents\runner.py", line 115, in run_episode
+    obs, rewards, terms, truncs, _ = env.step(actions)
+                                     ~~~~~~~~^^^^^^^^^
+  File "C:\dev\marl\restraint_study\commons_env\env.py", line 420, in step
+    self._update_stats(rewards, info)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\dev\marl\restraint_study\commons_env\env.py", line 490, in _update_stats
+    counts = self.patch_counts()
+  File "C:\dev\marl\restraint_study\commons_env\env.py", line 234, in patch_counts
+    return np.bincount(
+           ~~~~~~~~~~~^
+        self.patch_cell_pid[self._apples[self.patch_mask]], minlength=self.n_patches
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\dev\marl\restraint_study\.venv\Lib\site-packages\numpy\_core\multiarray.py", line 906, in bincount
+    @array_function_from_c_func_and_dispatcher(_multiarray_umath.bincount)
+    
+KeyboardInterrupt

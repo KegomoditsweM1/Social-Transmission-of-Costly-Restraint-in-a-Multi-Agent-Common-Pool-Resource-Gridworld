@@ -1,0 +1,22 @@
+[decision_biasing_w0.3_lam0.0_rho1.0_s100] ep    1  student return  13.90  restraint 0.44  teacher return  26.70  collective  40.60  (17s)
+[decision_biasing_w0.3_lam0.0_rho1.0_s100] ep  100  student return  20.60  restraint 0.19  teacher return  21.65  collective  42.25  (122s)
+[decision_biasing_w0.3_lam0.0_rho1.0_s100] ep  200  student return  27.50  restraint 0.26  teacher return  16.60  collective  44.10  (223s)
+[decision_biasing_w0.3_lam0.0_rho1.0_s100] ep  300  student return  25.40  restraint 0.20  teacher return  19.20  collective  44.60  (320s)
+[decision_biasing_w0.3_lam0.0_rho1.0_s100] ep  400  student return  24.65  restraint 0.20  teacher return  19.15  collective  43.80  (69082s)
+Traceback (most recent call last):
+  File "C:\dev\marl\restraint_study\scripts\train_student.py", line 146, in <module>
+    main()
+    ~~~~^^
+  File "C:\dev\marl\restraint_study\scripts\train_student.py", line 117, in main
+    run_episode(env, ctrl, seed=args.seed * 100_000 + ep, learn=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dev\marl\restraint_study\agents\runner.py", line 123, in run_episode
+    s_next = state_of(obs[a], grid)
+  File "C:\dev\marl\restraint_study\agents\features.py", line 102, in state_of
+    return encode(*features(observation["window"], observation["self_pos"], grid_shape))
+                   ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dev\marl\restraint_study\agents\features.py", line 68, in features
+    apple = _nearest(window, APPLE)
+  File "C:\dev\marl\restraint_study\agents\features.py", line 57, in _nearest
+    cells = np.argwhere(window == code)
+KeyboardInterrupt
