@@ -287,3 +287,40 @@ Format: date, what and why, exact command, result, decision.
   condition (3 training episodes; numbers not meaningful).
 - **Next:** E9 parameter selection; E10 pilot (asocial vs value shaping at
   λ ∈ {0, ½, 1}, ρ = 1, seeds 0–2; λ = ½ added in E6).
+
+## 2026-10-15 — E9: κ and ω chosen (pre-registered rule, seeds 100–102)
+
+- **Command** (student's laptop; interrupted once when the window was
+  closed, restarted, finished runs skipped):
+  `python scripts/run_batch.py --conditions asocial value_shaping decision_biasing --kappa 0.003 0.01 0.03 0.1 --omega 0.1 0.3 0.5 --lams 0.0 --rho 1.0 --seeds 100 101 102 --out-dir results/selection`
+  then `python scripts/select_social_param.py results/selection`
+- **Result** (λ = 0, ρ = 1; A_solo = 0.023 from the asocial students; E = 1):
+
+  | mechanism | value | restraint per encounter | f | partial? | last apples taken/ep | return |
+  |---|---|---|---|---|---|---|
+  | value shaping | κ = 0.003 | 0.422 | 0.408 | yes | 8.48 | 17.95 |
+  | value shaping | κ = 0.01 | 0.599 | 0.589 | yes | 3.98 | 13.91 |
+  | value shaping | κ = 0.03 | 0.549 | 0.539 | yes | 4.43 | 16.20 |
+  | value shaping | κ = 0.1 | 0.977 | 0.976 | no | 0.61 | 14.79 |
+  | decision biasing | ω = 0.1 | 0.072 | 0.050 | no | 20.86 | 27.76 |
+  | decision biasing | ω = 0.3 | 0.211 | 0.192 | no | 21.67 | 26.09 |
+  | decision biasing | ω = 0.5 | 0.369 | 0.354 | yes | 19.75 | 23.09 |
+
+- **Decision (by the rule fixed in E8):** **κ = 0.03** (sensitivity value
+  κ = 0.1); **ω = 0.5** (sensitivity value ω = 0.3). Held fixed across every
+  condition from now on.
+- **Observations:**
+  - Value shaping transmits restraint readily: even κ = 0.003 closes about
+    40% of the gap between the asocial student and the teacher; κ = 0.1 is
+    near-complete.
+  - Decision biasing transmits far less, and its students take about 20 last
+    apples per episode (value shaping: about 4): following the teacher leads
+    them to last apples, which their unchanged values then take. Harmless at
+    λ = 0 (patches regrow), destructive at λ = 1.
+  - κ = 0.01 (f = 0.59) scored above κ = 0.03 (f = 0.54) although a larger
+    bonus should transmit more: most likely noise with 3 seeds. It does not
+    change the choice, but shows how variable 3-seed estimates are.
+  - The sensitivity value κ = 0.1 is near-complete transmission, so the
+    sensitivity check tests much stronger transmission, not a small step.
+- **Next:** E10 pilot: asocial vs value shaping (κ = 0.03) at λ ∈ {0, ½, 1},
+  ρ = 1, seeds 0–2.

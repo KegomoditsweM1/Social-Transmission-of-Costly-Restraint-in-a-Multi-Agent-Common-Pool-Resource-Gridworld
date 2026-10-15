@@ -1,26 +1,8 @@
-[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep    1  student return  17.30  restraint 0.46  teacher return  23.95  collective  41.25  (19s)
-[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  100  student return  27.60  restraint 0.10  teacher return  16.25  collective  43.85  (119s)
-[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  200  student return  21.65  restraint 0.07  teacher return  21.45  collective  43.10  (222s)
-[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  300  student return  28.85  restraint 0.08  teacher return  16.10  collective  44.95  (323s)
-[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  400  student return  28.40  restraint 0.06  teacher return  16.65  collective  45.05  (419s)
-[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  500  student return  30.85  restraint 0.05  teacher return  13.60  collective  44.45  (69220s)
-Traceback (most recent call last):
-  File "C:\dev\marl\restraint_study\scripts\train_student.py", line 146, in <module>
-    main()
-  File "C:\dev\marl\restraint_study\scripts\train_student.py", line 117, in main
-    run_episode(env, ctrl, seed=args.seed * 100_000 + ep, learn=True)
-  File "C:\dev\marl\restraint_study\agents\runner.py", line 113, in run_episode
-    actions[a] = c.act(env, a)  # scripted policy
-  File "C:\dev\marl\restraint_study\commons_env\scripted.py", line 120, in act
-    return self.restrained.act(env, agent)
-  File "C:\dev\marl\restraint_study\commons_env\scripted.py", line 81, in act
-    targets = np.argwhere(env.apple_grid() & ~forbidden)
-  File "C:\dev\marl\restraint_study\.venv\Lib\site-packages\numpy\_core\numeric.py", line 672, in argwhere
-    return transpose(nonzero(a))
-  File "C:\dev\marl\restraint_study\.venv\Lib\site-packages\numpy\_core\fromnumeric.py", line 677, in transpose
-    return _wrapfunc(a, 'transpose', axes)
-  File "C:\dev\marl\restraint_study\.venv\Lib\site-packages\numpy\_core\fromnumeric.py", line 51, in _wrapfunc
-    return _wrapit(obj, method, *args, **kwds)
-  File "C:\dev\marl\restraint_study\.venv\Lib\site-packages\numpy\_core\fromnumeric.py", line 39, in _wrapit
-    conv = _array_converter(obj)
-KeyboardInterrupt
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep    1  student return  17.30  restraint 0.46  teacher return  23.95  collective  41.25  (22s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  100  student return  27.60  restraint 0.10  teacher return  16.25  collective  43.85  (134s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  200  student return  21.65  restraint 0.07  teacher return  21.45  collective  43.10  (238s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  300  student return  28.85  restraint 0.08  teacher return  16.10  collective  44.95  (334s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  400  student return  28.40  restraint 0.06  teacher return  16.65  collective  45.05  (437s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  500  student return  30.85  restraint 0.05  teacher return  13.60  collective  44.45  (594s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] ep  600  student return  27.85  restraint 0.06  teacher return  16.45  collective  44.30  (695s)
+[decision_biasing_w0.1_lam0.0_rho1.0_s101] FINAL (50 eval episodes): student return 30.56  restraint 0.083  collective 46.26
