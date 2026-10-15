@@ -324,3 +324,50 @@ Format: date, what and why, exact command, result, decision.
     sensitivity check tests much stronger transmission, not a small step.
 - **Next:** E10 pilot: asocial vs value shaping (κ = 0.03) at λ ∈ {0, ½, 1},
   ρ = 1, seeds 0–2.
+
+## 2026-10-15 — E10: pilot, asocial vs value shaping (κ = 0.03), ρ = 1, seeds 0–2
+
+- **Command:**
+  `python scripts/run_batch.py --conditions asocial value_shaping --kappa 0.03 --lams 0.0 0.5 1.0 --rho 1.0 --seeds 0 1 2 --out-dir results/pilot`
+  then `python scripts/summarise_students.py results/pilot`
+- **Run time:** 18 runs, 3 in parallel, 82 min. Per run: asocial 11–12 min at
+  every λ; value shaping 11 min (λ = 0), 14 min (λ = ½), 21–22 min (λ = 1).
+- **Sanity checks passed:** wall-blocked fraction 0; teacher patch deaths 0 in
+  every run; simultaneous patch deaths 0.07–0.29 per episode; asocial students
+  learn no restraint (0.018–0.028), giving a clean A_solo.
+- **Restraint per encounter** (mean, 95% CI over 3 seeds; f = (A − A_solo)/(1 − A_solo)):
+
+  | λ | asocial | value shaping | f | last apples taken/ep (asocial → VS) |
+  |---|---|---|---|---|
+  | 0 | 0.024 | 0.788 [0.706, 0.871] | 0.78 | 21.97 → 2.56 |
+  | ½ | 0.018 | 0.656 [0.592, 0.696] | 0.65 | 13.61 → 2.11 |
+  | 1 | 0.028 | 0.784 [0.778, 0.797] | 0.78 | 2.67 → 1.31 |
+
+- **Change in return (value shaping − asocial):**
+
+  | λ | student | teacher | collective |
+  |---|---|---|---|
+  | 0 | −14.30 | +8.31 | −5.99 |
+  | ½ | −7.51 | +9.69 | +2.18 |
+  | 1 | +1.79 | +4.92 | +6.71 |
+
+- **Observations (exploratory, 3 seeds):**
+  - Value shaping transmits restraint at every λ.
+  - Returns match the gate: at λ = 0 restraint is wasteful (student and
+    collective lose); at λ = ½ it is a social dilemma (the student loses, the
+    collective gains, collective CIs [35.76, 36.66] vs [38.08, 38.94] do not
+    overlap); at λ = 1 it pays individually and collectively.
+  - Ordering of transmission is λ = ½ lowest, λ = 0 ≈ λ = 1. This is not the
+    order H1 predicts, but 3-seed intervals are only the range of the seeds;
+    no conclusion about H1.
+  - **Open issue: possible passivity.** Value-shaping students spend about half
+    of all evaluation steps adjacent to a protected apple (per-step
+    opportunities about 25,000–42,000 vs 126–1,385 for asocial students) and
+    their longest stationary spell averages 341–363 steps per episode (asocial:
+    63–96). Restraint may partly be "parking" beside last apples. This would
+    also explain the large own-return loss at λ = 0 and the longer run times.
+    To check whether the teacher (π_R) waits similarly, i.e. whether this is
+    faithful transmission or an artefact of the bonus.
+- **Next:** inspect a value-shaping student with the viewer; depending on the
+  answer, add a stationarity measure for the teacher and student before the
+  decision-biasing pilot and the full design.
