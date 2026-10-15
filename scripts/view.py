@@ -17,21 +17,31 @@ Controls:
   SPACE  pause / resume          RIGHT  one step (while paused)
   UP     faster                  DOWN   slower
   R      new episode (next seed) S      save screenshot to results/
-  ESC    quit (or close the window)
+  V      start / stop recording an MP4 video to results/videos/
+  ESC    quit (or close the window; a recording in progress is saved)
+
+Recording: the video gets ONE FRAME PER ENVIRONMENT STEP and plays at
+--video-fps (default 8 steps per second), however fast you watch. So you can
+speed the viewer up with UP to record a long stretch quickly, and pausing does
+not add frozen time to the video. The red REC badge is not in the video.
+Needs:  pip install imageio imageio-ffmpeg
 
 Usage (virtual environment active, from the project folder):
   python scripts/view.py
   python scripts/view.py --lam 0.0
   python scripts/view.py --lam 1.0 --restraint-k 3 --steps 500
   python scripts/view.py --teacher mixed --rho 0.5 --student restrained
+  python scripts/view.py --record results/videos/clip.mp4 --record-steps 300
 """
 
 from __future__ import annotations
 
 import argparse
 import math
+from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import pygame
 
 from commons_env import CommonsHarvestEnv
@@ -54,6 +64,32 @@ class LearnedPolicy:
         from agents.features import state_of, valid_actions
         mask = valid_actions(obs["window"]) if self.wall_mask else None
         return self.q.act(state_of(obs, (env.height, env.width)), greedy=not self.explore, mask=mask)
+
+class Recorder:
+    """Writes viewer frames to an MP4 file (H.264), one frame per call to add()."""
+
+    def __init__(self, path, fps):
+        try:
+            import imageio.v2 as imageio
+        except ImportError as exc:
+            raise SystemExit("Recording needs two extra packages:  pip install imageio imageio-ffmpeg") from exc
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.writer = imageio.get_writer(str(self.path), fps=fps, codec="libx264", quality=8,
+                                         pixelformat="yuv420p", macro_block_size=1)
+        self.frames = 0
+
+    def add(self, surface):
+        w, h = surface.get_size()
+        to_bytes = getattr(pygame.image, "tobytes", None) or pygame.image.tostring
+        frame = np.frombuffer(to_bytes(surface, "RGB"), dtype=np.uint8).reshape(h, w, 3)
+        self.writer.append_data(frame[: h - h % 2, : w - w % 2])  # H.264 needs even sizes
+        self.frames += 1
+
+    def close(self):
+        self.writer.close()
+        print(f"saved {self.path}  ({self.frames} frames)")
+
 
 # --------------------------------------------------------------------------- #
 # Look and feel
@@ -262,13 +298,25 @@ class Viewer:
         for line in ("SPACE pause    RIGHT one step",
                      f"UP / DOWN speed  (now {fps} steps/s)",
                      "R new episode    S screenshot",
+                     "V start / stop recording video",
                      "ESC quit"):
             self.text(line, self.f_small, COL["muted"], (x, y)); y += 20
 
     def draw(self, obs, actions, infos, paused, fps, seed, done):
+        """Draw a frame without showing it (call show() afterwards)."""
         self.screen.fill(COL["bg"])
         self.draw_grid(obs, actions, infos)
         self.draw_panel(paused, fps, seed, done)
+
+    def draw_rec_badge(self, frames, video_fps):
+        """Red REC badge, drawn after the frame is captured so it is not in the video."""
+        x = self.ox + self.grid_w + MARGIN + 16  # bottom-left of the side panel
+        y = self.screen.get_height() - MARGIN - 44
+        pygame.draw.rect(self.screen, (255, 235, 235), (x, y, 134, 28), border_radius=14)
+        pygame.draw.circle(self.screen, (210, 30, 30), (x + 16, y + 14), 7)
+        self.text(f"REC  {frames / video_fps:5.1f} s", self.f_mid, (180, 20, 20), (x + 30, y + 4))
+
+    def show(self):
         pygame.display.flip()
 
 
@@ -291,6 +339,11 @@ def main():
                     help="show the social channel as on (value-shaping students were trained with it on)")
     ap.add_argument("--screenshot", default=None, help="save one frame to this file, then exit")
     ap.add_argument("--screenshot-step", type=int, default=1, help="step at which --screenshot is taken")
+    ap.add_argument("--video-fps", type=int, default=8, help="playback speed of recorded videos (steps per second)")
+    ap.add_argument("--record", default=None,
+                    help="record from the first step to this .mp4 file (V still stops it early)")
+    ap.add_argument("--record-steps", type=int, default=None,
+                    help="with --record: stop recording and quit after this many steps")
     args = ap.parse_args()
 
     env = CommonsHarvestEnv(
@@ -323,6 +376,18 @@ def main():
     pols, obs, infos = new_episode(seed)
     actions: dict = {}
     shots = Path("results")
+    recorder = None
+    capture = False  # True when the current frame should go into the video
+
+    def start_recording(path=None):
+        if path is None:
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = shots / "videos" / f"rec_lam{env.lam}_seed{seed}_t{env.episode_stats['steps']}_{stamp}.mp4"
+        print(f"recording to {path}  (press V to stop)")
+        return Recorder(path, args.video_fps)
+
+    if args.record:
+        recorder, capture = start_recording(args.record), True
 
     while running:
         step_once = False
@@ -344,6 +409,13 @@ def main():
                     seed += 1
                     pols, obs, infos = new_episode(seed)
                     actions, done = {}, False
+                    capture = recorder is not None
+                elif event.key == pygame.K_v:
+                    if recorder is None:
+                        recorder, capture = start_recording(), True
+                    else:
+                        recorder.close()
+                        recorder = None
                 elif event.key == pygame.K_s:
                     shots.mkdir(exist_ok=True)
                     path = shots / f"frame_lam{env.lam}_seed{seed}_t{env.episode_stats['steps']}.png"
@@ -355,8 +427,17 @@ def main():
                            else pols[a].act(env, a)) for a in env.agents}
             obs, _, _, _, infos = env.step(actions)
             done = not env.agents
+            capture = True
 
         viewer.draw(obs, actions, infos, paused, fps, seed, done)
+        if recorder is not None:
+            if capture:  # one frame per environment step (plus the first frame)
+                recorder.add(viewer.screen)
+                capture = False
+            viewer.draw_rec_badge(recorder.frames, args.video_fps)
+            if args.record and (done or (args.record_steps and env.episode_stats["steps"] >= args.record_steps)):
+                running = False  # --record mode: stop at --record-steps or at the end of the episode
+        viewer.show()
 
         if args.screenshot and (env.episode_stats["steps"] >= args.screenshot_step or done):
             pygame.image.save(viewer.screen, args.screenshot)
@@ -365,6 +446,8 @@ def main():
 
         clock.tick(fps)
 
+    if recorder is not None:
+        recorder.close()
     pygame.quit()
 
 
