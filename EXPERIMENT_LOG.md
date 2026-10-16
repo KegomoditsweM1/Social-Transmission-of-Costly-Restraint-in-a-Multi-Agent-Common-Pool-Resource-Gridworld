@@ -432,3 +432,56 @@ Format: date, what and why, exact command, result, decision.
     last apple; students do not forgo visible harvestable apples.
 - **Next:** decision-biasing pilot (ω = 0.5) at λ ∈ {0, ½, 1}, ρ = 1, seeds 0–2,
   reusing the E10 asocial students; then Phase 3.
+
+## 2026-10-16 — E12: decision-biasing pilot (ω = 0.5), ρ = 1, seeds 0–2
+
+- **Command** (interrupted once after the λ = 0 runs; restart skipped them):
+  `python scripts/run_batch.py --conditions decision_biasing --omega 0.5 --lams 0.0 0.5 1.0 --rho 1.0 --seeds 0 1 2 --out-dir results/pilot`
+  then `python scripts/summarise_students.py results/pilot` and
+  `python scripts/stillness_check.py results/pilot` (all 27 students).
+- **Run time per student:** λ = 0 not recorded (interrupted batch), λ = ½ about
+  33 min, λ = 1 about 21 min (3 in parallel). The slowest condition so far.
+- **Result** (means over 3 seeds; asocial → decision biasing → value shaping):
+
+  | λ | restraint per encounter | last apples taken/ep | encounters (50 eps) | student return | collective return | all patches lost |
+  |---|---|---|---|---|---|---|
+  | 0 | 0.024 → 0.362 → 0.788 | 21.97 → 18.93 → 2.56 | 1124 → 1483 → 716 | 29.38 → 22.73 → 15.08 | 45.44 → 44.47 → 39.45 | 0.97 → 0.90 → 0.00 |
+  | ½ | 0.018 → 0.358 → 0.656 | 13.61 → 13.55 → 2.11 | 691 → 1056 → 305 | 20.95 → 16.64 → 13.43 | 36.23 → 36.37 → 38.41 | 0.89 → 0.97 → 0.00 |
+  | 1 | 0.028 → 0.326 → 0.784 | 2.67 → 3.81 → 1.31 | 137 → 283 → 303 | 10.83 → 7.37 → 12.62 | 28.35 → 23.15 → 35.07 | 0.13 → 0.93 → 0.02 |
+
+  Stillness check, decision biasing (teacher / student, % of steps):
+
+  | λ | nothing to harvest | still | still with food in view | still beside protected apple | beside protected apple |
+  |---|---|---|---|---|---|
+  | 0 | 90.5 | 94.9 / 43.4 | 3.6 / 1.9 | 18.5 / 0.4 | 18.7 / 2.4 |
+  | ½ | 91.3 | 96.1 / 33.6 | 4.3 / 1.5 | 13.1 / 0.2 | 13.3 / 1.7 |
+  | 1 | 96.1 | 97.5 / 39.4 | 1.3 / 0.7 | 5.4 / 0.1 | 5.5 / 0.4 |
+
+  Re-measured restraint 0.374 / 0.369 / 0.302 (original 0.362 / 0.358 / 0.326).
+- **Observations (exploratory, 3 seeds):**
+  - Restraint per encounter rises to about 0.33–0.36, but resource outcomes do
+    not improve: last apples taken are unchanged at λ = ½ (13.55 vs 13.61) and
+    higher at λ = 1 (3.81 vs 2.67 of at most 4 patches), where all patches are
+    lost in 93% of episodes (asocial 13%). Collective return is unchanged at
+    λ = 0 and ½ and lower at λ = 1 (23.15 vs 28.35). This confirms the
+    "signpost" effect anticipated in E9: following the teacher leads the
+    student to last apples, which its own values then take.
+  - The rate rises because encounters rise (following the teacher brings the
+    student to more last apples), not because fewer apples are taken.
+  - The ≈ 0.35 rate is flat across λ and close to the selection value (0.369),
+    consistent with a mechanical effect of applying the bias at evaluation
+    (ω = 0.5 overrides half of all choices, including restraint decisions)
+    rather than learned restraint. The H3 teacher-removal phase tests this.
+  - Decision-biasing students do not wait beside last apples (< 2.5% of steps;
+    value shaping 41–50%). They stand still with food in view slightly more
+    often (0.7–1.9%), probably trying to step into the teacher's cell (agent
+    blocked 11–14% of steps), still below the teacher's own 1.3–4.3%.
+  - Methodological point: a higher restraint rate without fewer last apples
+    taken or higher collective return is not better protection of the
+    resource. Restraint must always be reported together with last apples
+    taken and collective return (proposal §6.6).
+- **For the supervisor:** decision biasing is applied during evaluation as
+  pre-registered; its measured restraint is largely mechanical. Proposal: keep
+  the design and report it, since the post-removal phase measures what was
+  learned.
+- **Next:** Phase 3 (CT metric, post-removal phase for H3, partner test).
