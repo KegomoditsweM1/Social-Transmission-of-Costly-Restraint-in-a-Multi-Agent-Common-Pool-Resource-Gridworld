@@ -20,6 +20,11 @@ for each condition (mechanism, lambda, rho), the mean over independent runs with
   partners  restraint and collective return with the teacher, a greedy agent and
             a naive learner (channel off, learning off for the student)
 
+Everything is computed for TWO restraint measures:
+  per encounter  proposal Eq. 10 (an encounter starts each time the student becomes
+                 adjacent to a last apple); inflated by back-and-forth movement
+  per apple      each last apple counted once, however often the student returns
+                 to it (added after the pilot, E14); robust to that movement
 Restraint is always printed next to last apples taken per episode and collective
 return (proposal Section 6.6), because a higher rate is not protection of the
 resource unless fewer last apples are taken.
@@ -89,9 +94,10 @@ def main():
         row = {"tag": d["tag"], "condition": c["condition"], "param": param, "lam": c["lam"],
                "rho": c["rho"], "seed": c["seed"], "removal_episodes": d["phase3"]["removal_episodes"]}
         for k in MEASURES:
-            for q in ("student_restraint", "student_protected_taken_per_ep", "student_return",
-                      "partner_return", "collective_return", "partner_restraint", "fully_depleted_frac"):
-                row[f"{k}_{q}"] = m[k][q]
+            for q in ("student_restraint", "student_restraint_apple", "student_protected_taken_per_ep",
+                      "student_return", "partner_return", "collective_return", "partner_restraint",
+                      "partner_restraint_apple", "fully_depleted_frac"):
+                row[f"{k}_{q}"] = m[k].get(q, math.nan)  # files from before E14 lack *_apple
         row["half_first"] = m["half"].get("student_restraint_first_half", math.nan)
         row["half_second"] = m["half"].get("student_restraint_second_half", math.nan)
         runs.append(row)
@@ -126,33 +132,47 @@ def main():
         E = float(np.nanmean(teacher_E[(lam, rho)]))
         name = cond + (f" kappa={param}" if cond == "value_shaping" else f" omega={param}" if cond == "decision_biasing" else "")
         print(f"\n=== {name}   lambda={lam}   rho={rho}   (n = {len(g)} runs; asocial n = {len(a)}; teacher E = {E:.3f})")
-        print(f"   {'measure':18s}{'restraint':>26s}{'last apples/ep':>16s}{'student ret':>13s}{'collective':>12s}")
+        print(f"   {'measure':18s}{'restraint per encounter':>26s}{'restraint per apple':>26s}"
+              f"{'last apples/ep':>16s}{'student ret':>13s}{'collective':>12s}")
         for k in MEASURES:
             if k == "partner_teacher":
                 continue  # identical to 'off'
             label = {"off": "off (=teacher)", "partner_greedy": "partner: greedy",
                      "partner_naive": "partner: naive"}.get(k, k)
             print(f"   {label:18s}{fmt(ci([r[f'{k}_student_restraint'] for r in g])):>26s}"
+                  f"{fmt(ci([r[f'{k}_student_restraint_apple'] for r in g])):>26s}"
                   f"{np.mean([r[f'{k}_student_protected_taken_per_ep'] for r in g]):>16.2f}"
                   f"{np.mean([r[f'{k}_student_return'] for r in g]):>13.2f}"
                   f"{np.mean([r[f'{k}_collective_return'] for r in g]):>12.2f}")
         row = {"condition": cond, "param": param, "lam": lam, "rho": rho, "n": len(g), "E": E}
         if cond != "asocial" and a:
-            full = [r["full_student_restraint"] for r in g]
-            halfv = [r["half_student_restraint"] for r in g]
-            solo = [r["full_student_restraint"] for r in a]
-            solo_post = [r["post_student_restraint"] for r in a]
-            ct = joint_ci(np.c_[full, halfv], solo,
-                          lambda s, b: 0.5 * (s[:, 0].mean() - b.mean()) / E + 0.5 * (s[:, 1].mean() - b.mean()) / E)
-            gain = joint_ci(full, solo, lambda s, b: s.mean() - b.mean())
-            kept = joint_ci([r["post_student_restraint"] for r in g], solo_post, lambda s, b: s.mean() - b.mean())
-            print(f"   CT (Eq. 4)          {fmt(ct)}" + ("   <- CI includes 0: no evidence of transmission" if ct[1] <= 0 <= ct[2] else ""))
-            print(f"   gain A_full-A_solo  {fmt(gain)}   (H2)")
-            print(f"   retained after removal (A_post - A_solo_post)  {fmt(kept)}   (H3)")
-            row.update({"CT": ct[0], "CT_lo": ct[1], "CT_hi": ct[2], "gain": gain[0], "gain_lo": gain[1],
-                        "gain_hi": gain[2], "retained": kept[0], "retained_lo": kept[1], "retained_hi": kept[2]})
+            for metric, suffix, label in (("student_restraint", "", "per encounter"),
+                                          ("student_restraint_apple", "_apple", "per apple")):
+                full = [r[f"full_{metric}"] for r in g]
+                halfv = [r[f"half_{metric}"] for r in g]
+                solo = [r[f"full_{metric}"] for r in a]
+                solo_post = [r[f"post_{metric}"] for r in a]
+                partner_key = "full_" + metric.replace("student_", "partner_")  # the teacher's own rate
+                E_m = float(np.nanmean([r[partner_key] for r in runs if (r["lam"], r["rho"]) == (lam, rho)]))
+                if any(math.isnan(v) for v in full + halfv + solo):
+                    print(f"   [{label}] not available (re-run phase3_eval.py with --force --reuse-post)")
+                    continue
+                ct = joint_ci(np.c_[full, halfv], solo,
+                              lambda s_, b: 0.5 * (s_[:, 0].mean() - b.mean()) / E_m
+                              + 0.5 * (s_[:, 1].mean() - b.mean()) / E_m)
+                gain = joint_ci(full, solo, lambda s_, b: s_.mean() - b.mean())
+                kept = joint_ci([r[f"post_{metric}"] for r in g], solo_post, lambda s_, b: s_.mean() - b.mean())
+                flag = "   <- CI includes 0: no evidence of transmission" if ct[1] <= 0 <= ct[2] else ""
+                print(f"   [{label:13s}] CT (Eq. 4) {fmt(ct)}{flag}")
+                print(f"   [{label:13s}] gain A_full - A_solo (H2) {fmt(gain)}")
+                print(f"   [{label:13s}] retained after removal, A_post - A_solo_post (H3) {fmt(kept)}")
+                row.update({f"CT{suffix}": ct[0], f"CT{suffix}_lo": ct[1], f"CT{suffix}_hi": ct[2],
+                            f"gain{suffix}": gain[0], f"gain{suffix}_lo": gain[1], f"gain{suffix}_hi": gain[2],
+                            f"retained{suffix}": kept[0], f"retained{suffix}_lo": kept[1],
+                            f"retained{suffix}_hi": kept[2], f"E{suffix}": E_m})
         for k in MEASURES:
             row[f"{k}_restraint"] = float(np.nanmean([r[f"{k}_student_restraint"] for r in g]))
+            row[f"{k}_restraint_apple"] = float(np.nanmean([r[f"{k}_student_restraint_apple"] for r in g]))
             row[f"{k}_taken_per_ep"] = float(np.mean([r[f"{k}_student_protected_taken_per_ep"] for r in g]))
             row[f"{k}_collective"] = float(np.mean([r[f"{k}_collective_return"] for r in g]))
         summary.append(row)

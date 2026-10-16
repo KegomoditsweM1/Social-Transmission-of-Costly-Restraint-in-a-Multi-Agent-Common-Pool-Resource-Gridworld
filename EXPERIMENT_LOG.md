@@ -519,3 +519,61 @@ Format: date, what and why, exact command, result, decision.
 - **Next:** run Phase 3 on the 27 pilot students:
   `python scripts/phase3_eval.py results/pilot` then
   `python scripts/summarise_phase3.py results/pilot`.
+
+## 2026-10-16 — E14: Phase 3 on the pilot; encounter inflation found; per-apple restraint added
+
+- **Command:** `python scripts/phase3_eval.py results/pilot` (27 students, 300
+  removal episodes, 50 evaluation episodes per measure), then
+  `python scripts/summarise_phase3.py results/pilot`.
+  Check `asocial full = half = off`: OK.
+- **Result, restraint per encounter (Eq. 10)** (means over 3 seeds, 95% bootstrap CI):
+
+  | condition | λ | A_full | A_half | off | post | CT | retained after removal |
+  |---|---|---|---|---|---|---|---|
+  | value shaping κ = 0.03 | 0 | 0.834 | 0.834 | 0.834 | 0.742 | 0.790 [0.706, 0.875] | 0.705 [0.421, 0.873] |
+  | value shaping κ = 0.03 | ½ | 0.671 | 0.671 | 0.671 | 0.553 | 0.653 [0.630, 0.675] | 0.482 [0.349, 0.604] |
+  | value shaping κ = 0.03 | 1 | 0.758 | 0.758 | 0.758 | 0.777 | 0.732 [0.645, 0.800] | 0.765 [0.631, 0.881] |
+  | decision biasing ω = 0.5 | 0 | 0.374 | 0.270 | 0.171 | 0.080 | 0.279 [0.199, 0.339] | 0.044 [−0.032, 0.106] |
+  | decision biasing ω = 0.5 | ½ | 0.369 | 0.261 | 0.003 | 0.016 | 0.298 [0.278, 0.318] | −0.056 [−0.186, 0.020] |
+  | decision biasing ω = 0.5 | 1 | 0.302 | 0.274 | 0.000 | 0.947 | 0.261 [0.222, 0.301] | 0.935 [0.878, 0.972] |
+
+  Asocial post-removal restraint 0.037 / 0.072 / 0.012 (continued learning alone
+  does not produce restraint).
+- **Observations (exploratory, 3 seeds):**
+  - Value shaping: CT far from 0 at every λ. After removal, restraint persists;
+    it erodes most where it is costly (λ = ½: 0.67 → 0.55, last apples taken
+    2.0 → 3.3) and not at all where it pays (λ = 1: 0.76 → 0.78).
+  - Decision biasing: restraint depends on the teacher being visible (drops at
+    the halfway switch, ≈ 0 with the channel off) and is not retained after
+    removal at λ = 0 and ½, as H3 predicts.
+  - Partner test: value-shaping students keep restraint with a naive partner
+    (0.51–0.88), less with a greedy partner at λ > 0 (0.33, 0.48).
+- **Anomaly: decision biasing at λ = 1 after removal (0.947).** Encounter counts
+  per episode were 64.5, 121.5 and 17.1 (asocial at λ = 1: 2.7–3.1; value
+  shaping: 4–8), with 2.00, 2.00 and 1.88 last apples taken per episode. These
+  students move back and forth beside last apples, and each return starts a new
+  encounter, so the per-encounter rate is inflated. Part of the effect is real:
+  last apples taken fall from 3.4–3.9 (before removal) to about 2 per episode,
+  and collective return rises (32.8 vs 29.1 for asocial students after removal).
+  Milder inflation also appears for value shaping at λ = 0, seed 1
+  (35 encounters per episode vs about 10 for the other seeds).
+- **Measurement amendment (before the full design):** added restraint PER APPLE:
+  each last apple (one patch's spell in the last-apple state, until the apple is
+  taken or the patch regrows) counts once per agent, however often the agent
+  returns; last apples taken by the other agent are excluded, as pre-empted
+  encounters are in Eq. 10. Implemented in `phase3_eval.py` (AppleTracker,
+  wrapping env.step; no change to the environment). Verified against the
+  environment on scripted policies at every λ: last apples taken match the
+  environment's protected-harvest count exactly, and distinct apples met lie
+  between apples taken and Eq. 10 encounters. A bug found by this check (a take
+  and a regrowth in the same step merged two last apples) was fixed.
+  `summarise_phase3.py` now reports CT, H2 and H3 for both measures.
+  `--reuse-post` re-measures using the saved post-removal Q-tables.
+- **For the supervisor:** propose reporting both measures, with per-apple
+  restraint as the primary measure in the full design, since the pilot showed
+  that per-encounter restraint is inflated by back-and-forth movement. This is a
+  change to the pre-registered primary outcome, made before the full design and
+  motivated by a pilot finding, not by the hypotheses.
+- **Next:** re-measure the pilot with both measures:
+  `python scripts/phase3_eval.py results/pilot --force --reuse-post` then
+  `python scripts/summarise_phase3.py results/pilot`.

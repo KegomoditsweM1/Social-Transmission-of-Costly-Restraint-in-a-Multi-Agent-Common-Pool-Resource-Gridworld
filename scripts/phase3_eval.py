@@ -21,8 +21,10 @@ with learning OFF unless stated, on the same evaluation seeds as training
 Asocial students go through the same steps (their channel is always off), which
 gives A_solo and the baseline for every comparison, including continued learning.
 
-Each measure records: student restraint per encounter (primary), last apples
-taken per episode, student / partner / collective return, patch losses by cause,
+Each measure records: student restraint per encounter (proposal Eq. 10),
+student restraint PER APPLE (each last apple counted once, however often the
+student returns to it; robust to back-and-forth movement, added after the pilot,
+E14), last apples taken per episode, student / partner / collective return, patch losses by cause,
 and the partner's restraint. Output per student: <tag>_phase3.json (and the
 post-removal Q-table <tag>_post.npz). Students that already have a _phase3.json
 are skipped, so an interrupted run can be restarted.
@@ -35,6 +37,8 @@ PROVISIONAL choices (fixed before seeing results; change with the options):
 
 Usage (virtual environment active, from the project folder):
     python scripts/phase3_eval.py results/pilot
+    python scripts/phase3_eval.py results/pilot --force --reuse-post   # re-measure, keeping the
+                                     # saved post-removal Q-tables instead of re-training them
     python scripts/phase3_eval.py results/pilot --workers 3 --removal-episodes 300
 """
 
@@ -59,7 +63,81 @@ T, S = "teacher", "student"  # the partner always occupies the "teacher" slot
 # --------------------------------------------------------------------------- #
 # pooling episode records (the same formulas as agents.runner.evaluate)
 # --------------------------------------------------------------------------- #
-def pool(records: list[dict]) -> dict:
+class AppleTracker:
+    """Per-apple restraint: each LAST APPLE counts once per agent, however often the
+    agent comes back to it. A 'last apple' is one patch's spell in the protected
+    state: from the step the patch is reduced to its protected apple until that
+    apple is taken or the patch regrows. For each agent and episode it records the
+    distinct last apples it was next to and the ones it took; last apples taken by
+    the OTHER agent (and not by this one) are left out of this agent's denominator,
+    as pre-empted encounters are in Eq. 10.
+
+    It wraps env.step on the instance (no change to the environment); close()
+    restores it and returns the totals."""
+
+    MOVES = ((-1, 0), (1, 0), (0, -1), (0, 1))
+
+    def __init__(self, env):
+        self.env, self._orig = env, env.step
+        env.step = self.step
+        self.took_total = {S: 0, T: 0}
+        self.enc_total = {S: 0, T: 0}
+        self._open = False
+
+    def _start(self):
+        self.inst, self.next_id = {}, 0
+        self.enc = {S: set(), T: set()}
+        self.took = {S: set(), T: set()}
+        self._open = True
+
+    def _flush(self):
+        if not self._open:
+            return
+        for a, b in ((S, T), (T, S)):
+            pre_empted = self.took[b] - self.took[a]
+            self.took_total[a] += len(self.took[a])
+            self.enc_total[a] += len(self.enc[a] - pre_empted)
+        self._open = False
+
+    def step(self, actions):
+        env = self.env
+        if env.episode_stats["steps"] == 0:  # first step of a new episode
+            self._flush()
+            self._start()
+        prot = env.protected_apple_grid()
+        current = {int(p) for p in np.unique(env.patch_id[prot])}
+        for p in [p for p in self.inst if p not in current]:
+            del self.inst[p]  # spell over: taken or regrown
+        for p in current:
+            if p not in self.inst:
+                self.inst[p], self.next_id = self.next_id, self.next_id + 1
+        before = {a: env.episode_stats["protected_harvests"][a] for a in (S, T)}
+        for a in (S, T):
+            y, x = env.agent_position(a)
+            for dy, dx in self.MOVES:
+                ny, nx = y + dy, x + dx
+                if 0 <= ny < env.height and 0 <= nx < env.width and prot[ny, nx]:
+                    self.enc[a].add(self.inst[int(env.patch_id[ny, nx])])
+        out = self._orig(actions)
+        ended = set()
+        for a in (S, T):
+            if env.episode_stats["protected_harvests"][a] > before[a]:
+                y, x = env.agent_position(a)
+                p = int(env.patch_id[y, x])
+                if p in self.inst:
+                    self.took[a].add(self.inst[p])
+                    ended.add(p)
+        for p in ended:  # the spell ends when its apple is taken, even if the patch
+            del self.inst[p]  # regrows a new last apple in this same step
+        return out
+
+    def close(self):
+        self._flush()
+        self.env.step = self._orig
+        return {"took": dict(self.took_total), "enc": dict(self.enc_total)}
+
+
+def pool(records: list[dict], apples: dict | None = None) -> dict:
     n = len(records)
     out = {"episodes": n,
            "fully_depleted_frac": float(np.mean([r["survival_time"] is not None for r in records])),
@@ -73,6 +151,11 @@ def pool(records: list[dict]) -> dict:
         out[f"{name}_return"] = float(np.mean([r[f"{a}_return"] for r in records]))
         out[f"{name}_patch_deaths_per_ep"] = sum(r[f"{a}_patch_deaths_lapse"] for r in records) / n
     out["collective_return"] = out["student_return"] + out["partner_return"]
+    if apples is not None:  # per-apple restraint (robust to back-and-forth movement)
+        for a, name in ((S, "student"), (T, "partner")):
+            e, t = apples["enc"][a], apples["took"][a]
+            out[f"{name}_restraint_apple"] = (1.0 - t / e) if e > 0 else math.nan
+            out[f"{name}_apples_met_per_ep"] = e / n
     if "student_protected_harvests_first" in records[0]:  # A_half: restraint in each half
         took1 = sum(r["student_protected_harvests_first"] for r in records)
         enc1 = sum(r["student_encounters_first"] - r["student_preempted_encounters_first"] for r in records)
@@ -101,7 +184,8 @@ def greedy_acting(q: QLearner) -> QLearner:
 # --------------------------------------------------------------------------- #
 # one student
 # --------------------------------------------------------------------------- #
-def evaluate_student(summary_path: str, removal_episodes: int, eval_episodes: int) -> dict:
+def evaluate_student(summary_path: str, removal_episodes: int, eval_episodes: int,
+                     reuse_post: bool = False) -> dict:
     from agents.features import N_STATES
     from agents.runner import run_episode
     from agents.social import DecisionBiasing
@@ -139,39 +223,54 @@ def evaluate_student(summary_path: str, removal_episodes: int, eval_episodes: in
         return TeacherPolicy(cfg["rho"], seed=10_000 + seed)
 
     def run(ctrl, channel_on, switch=None, learn=False, ep_seeds=seeds, greedy=True):
+        """Run the evaluation episodes and return the pooled measures."""
         env.set_social_channel(T, False)  # partners never receive social information
-        return [run_episode(env, ctrl, seed=s, learn=learn, greedy=greedy,
-                            social={S: channel_on}, switch_off_at=switch, eval_epsilon=eps)
-                for s in ep_seeds]
+        tracker = AppleTracker(env)
+        try:
+            recs = [run_episode(env, ctrl, seed=s, learn=learn, greedy=greedy,
+                                social={S: channel_on}, switch_off_at=switch, eval_epsilon=eps)
+                    for s in ep_seeds]
+        finally:
+            apples = tracker.close()
+        return pool(recs, apples)
 
     res = {}
-    res["full"] = pool(run({T: teacher(), S: student()}, channel_on=social))
-    res["half"] = pool(run({T: teacher(), S: student()}, channel_on=social, switch=half))
-    res["off"] = pool(run({T: teacher(), S: student()}, channel_on=False))
+    res["full"] = run({T: teacher(), S: student()}, channel_on=social)
+    res["half"] = run({T: teacher(), S: student()}, channel_on=social, switch=half)
+    res["off"] = run({T: teacher(), S: student()}, channel_on=False)
     res["partner_teacher"] = res["off"]  # the partner test with its own teacher IS the 'off' measure
 
     # ---- post-removal phase (H3): continue learning with the channel off ----
+    post_path = summary_path.with_name(tag + "_post.npz")
+    reused = bool(reuse_post and post_path.exists())
     learner = student(frozen=False)
-    first = cfg["episodes"] + 1  # continue the training seed sequence
-    train_seeds = [seed * 100_000 + ep for ep in range(first, first + removal_episodes)]
-    ctrl = {T: teacher(), S: learner}
-    for s in train_seeds:
-        run_episode(env, ctrl, seed=s, learn=True, social={S: False})
+    if reused:  # re-measure only: keep the saved post-removal values
+        learner.Q = QLearner.load(post_path).Q.copy()
+    else:
+        first = cfg["episodes"] + 1  # continue the training seed sequence
+        train_seeds = [seed * 100_000 + ep for ep in range(first, first + removal_episodes)]
+        ctrl = {T: teacher(), S: learner}
+        for s in train_seeds:
+            run_episode(env, ctrl, seed=s, learn=True, social={S: False})
+        learner.save(post_path)
     learner.freeze()
-    learner.save(summary_path.with_name(tag + "_post.npz"))
-    res["post"] = pool(run({T: teacher(), S: learner}, channel_on=False))
+    res["post"] = run({T: teacher(), S: learner}, channel_on=False)
 
     # ---- partner test: channel off, student frozen ----
-    res["partner_greedy"] = pool(run({T: GreedyPolicy(seed=50_000 + seed), S: student()}, channel_on=False))
+    res["partner_greedy"] = run({T: GreedyPolicy(seed=50_000 + seed), S: student()}, channel_on=False)
     naive = QLearner(N_STATES, alpha=cfg["alpha"], gamma=cfg["gamma"], beta=cfg["beta"],
                      q_init=cfg.get("q_init", 1.0), seed=40_000 + seed)
     naive.social, naive.bias, naive.mask_walls = None, None, cfg.get("wall_mask", True)
-    res["partner_naive"] = pool(run({T: naive, S: greedy_acting(student())}, channel_on=False,
-                                    learn=True, greedy=False))
+    res["partner_naive"] = run({T: naive, S: greedy_acting(student())}, channel_on=False,
+                               learn=True, greedy=False)
 
+    if reused:  # keep the length of the removal phase that produced the saved Q-table
+        old = summary_path.with_name(tag + "_phase3.json")
+        if old.exists():
+            removal_episodes = json.loads(old.read_text())["phase3"].get("removal_episodes", removal_episodes)
     out = {"tag": tag, "config": cfg,
            "phase3": {"removal_episodes": removal_episodes, "eval_episodes": eval_episodes,
-                      "eval_epsilon": eps, "switch_off_at": half,
+                      "eval_epsilon": eps, "switch_off_at": half, "reused_post_qtable": reused,
                       "seconds": round(time.time() - t0)},
            "measures": res}
     summary_path.with_name(tag + "_phase3.json").write_text(json.dumps(out, indent=2))
@@ -186,6 +285,8 @@ def main():
     ap.add_argument("--eval-episodes", type=int, default=50, help="evaluation episodes per measure")
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--force", action="store_true", help="redo students that already have _phase3.json")
+    ap.add_argument("--reuse-post", action="store_true",
+                    help="use the saved <tag>_post.npz instead of re-running the post-removal phase")
     args = ap.parse_args()
 
     folder = Path(args.folder)
@@ -201,7 +302,7 @@ def main():
 
     t0, ok, failed = time.time(), 0, 0
     with ProcessPoolExecutor(max_workers=args.workers) as pool_:
-        futs = {pool_.submit(evaluate_student, p, args.removal_episodes, args.eval_episodes): p for p in todo}
+        futs = {pool_.submit(evaluate_student, p, args.removal_episodes, args.eval_episodes, args.reuse_post): p for p in todo}
         for i, f in enumerate(as_completed(futs), 1):
             name = Path(futs[f]).name.replace("_summary.json", "")
             try:
@@ -209,7 +310,9 @@ def main():
                 m = r["measures"]
                 ok += 1
                 print(f"[{i}/{len(todo)}] {name}: restraint full {m['full']['student_restraint']:.2f}  "
-                      f"off {m['off']['student_restraint']:.2f}  post {m['post']['student_restraint']:.2f}  "
+                      f"(per apple {m['full']['student_restraint_apple']:.2f})  "
+                      f"post {m['post']['student_restraint']:.2f} "
+                      f"(per apple {m['post']['student_restraint_apple']:.2f})  "
                       f"({r['phase3']['seconds'] / 60:.1f} min, elapsed {(time.time() - t0) / 60:.1f} min)",
                       flush=True)
             except Exception:
