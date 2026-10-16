@@ -1,7 +1,5 @@
 ![Social Transmission of Costly Restraint](docs/header.png)
 
-# Social Transmission of Costly Restraint in a Multi-Agent Common-Pool Resource Gridworld
-
 Can an agent that has learned to harvest a shared resource with restraint pass
 that restraint on to a newcomer who only watches it, even when restraint costs
 the newcomer reward?
