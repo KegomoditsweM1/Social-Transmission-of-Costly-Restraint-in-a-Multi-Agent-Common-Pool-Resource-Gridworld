@@ -485,3 +485,37 @@ Format: date, what and why, exact command, result, decision.
   the design and report it, since the post-removal phase measures what was
   learned.
 - **Next:** Phase 3 (CT metric, post-removal phase for H3, partner test).
+
+## 2026-10-16 — E13: Phase 3 built (transmission, persistence, partners)
+
+- **New scripts:** `scripts/phase3_eval.py` (measures every trained student) and
+  `scripts/summarise_phase3.py` (CT, H2, H3 and partner tables with bootstrap CIs).
+- **Measures per student** (learning off unless stated; evaluation seeds
+  3,000,000 + i; 5% random moves away from restraint decisions):
+  full (channel on throughout, A_full), half (channel off at step 750, A_half),
+  off (channel off throughout, before further learning; identical to the partner
+  test with its own teacher), post (post-removal phase for H3: 300 further
+  learning episodes with the channel off, teacher present, training seeds
+  continued; then evaluated with the channel off), partner tests with a greedy
+  agent and a naive learner.
+- **Analysis:** CT = ½(A_full − A_solo)/E + ½(A_half − A_solo)/E with A_solo from
+  asocial students at the same λ and ρ and E the teacher's measured restraint;
+  bootstrap resamples social and asocial runs together. H2: A_full − A_solo.
+  H3: A_post − A_solo_post (asocial students go through the same removal phase).
+  Restraint is always printed next to last apples taken and collective return.
+- **Design decisions (pre-registered, PROVISIONAL until the supervisor agrees):**
+  - post-removal phase: 300 episodes (half of training);
+  - 50 evaluation episodes per measure;
+  - naive partner: a fresh asocial Q-learner with the student's
+    hyper-parameters, learning across the 50 partner-test episodes (it also
+    receives the 5% evaluation random moves);
+  - the same teacher random seed for every measure (common random numbers), so
+    measures differ only in the deliberate change; consequence used as a check:
+    for asocial students full = half = off exactly.
+- **Checks on three 30-episode test students (sandbox, not results):** asocial
+  full = half = off exactly; value shaping gives the same restraint with the
+  channel on and off (learning off), as the proposal states; decision biasing
+  drops to 0 with the channel off; CT arithmetic verified by hand.
+- **Next:** run Phase 3 on the 27 pilot students:
+  `python scripts/phase3_eval.py results/pilot` then
+  `python scripts/summarise_phase3.py results/pilot`.
