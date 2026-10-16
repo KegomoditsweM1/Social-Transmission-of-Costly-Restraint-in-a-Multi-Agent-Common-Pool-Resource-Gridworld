@@ -196,7 +196,8 @@ each last apple counts once however often the agent comes back to it:
 where a "last apple" is one patch's spell in the last-apple state, from the
 moment the patch is reduced to one apple until that apple is taken or the patch
 regrows, and apples taken first by the other agent are excluded. Both rates are
-reported.
+reported; the per-apple rate is the more conservative and is the one the
+results lead with.
 
 Restraint is always read together with **collective return**, **survival time**
 (steps until every patch is empty) and **patch losses by cause**, including
@@ -346,19 +347,19 @@ in most episodes: at $`\lambda = 1`$ a single lapse kills a patch for good.
 Students were trained for 600 episodes beside the fully restrained teacher
 ($`\rho = 1`$) at each $`\lambda`$. With only three runs per condition these
 results show what the full design should test; they are not strong evidence.
-Restraint below is **per encounter**; the per-apple values are being measured.
+Intervals are 95% bootstrap intervals over runs.
 
-| | $`\lambda`$ | Restraint $`A_{\mathrm{full}}`$ | Last apples taken per episode | Collective return | CT [95% CI] |
-|---|---|---|---|---|---|
-| asocial | 0 | 0.04 | 21.6 | 45.3 | |
-| asocial | $`\tfrac12`$ | 0.02 | 13.7 | 36.4 | |
-| asocial | 1 | 0.03 | 2.7 | 28.2 | |
-| value shaping | 0 | 0.83 | 2.5 | 38.9 | 0.79 [0.71, 0.88] |
-| value shaping | $`\tfrac12`$ | 0.67 | 2.0 | 38.7 | 0.65 [0.63, 0.68] |
-| value shaping | 1 | 0.76 | 1.4 | 34.9 | 0.73 [0.65, 0.80] |
-| decision biasing | 0 | 0.37 | 18.9 | 44.5 | 0.28 [0.20, 0.34] |
-| decision biasing | $`\tfrac12`$ | 0.37 | 14.1 | 36.1 | 0.30 [0.28, 0.32] |
-| decision biasing | 1 | 0.30 | 3.8 | 22.6 | 0.26 [0.22, 0.30] |
+| | $`\lambda`$ | Restraint per apple | (per encounter) | Last apples taken per episode | Collective return | CT per apple [95% CI] |
+|---|---|---|---|---|---|---|
+| asocial | 0 | 0.00 | (0.04) | 21.6 | 45.3 | |
+| asocial | $`\tfrac12`$ | 0.00 | (0.02) | 13.7 | 36.4 | |
+| asocial | 1 | 0.02 | (0.03) | 2.7 | 28.2 | |
+| value shaping | 0 | 0.65 | (0.83) | 2.5 | 38.9 | 0.65 [0.57, 0.73] |
+| value shaping | $`\tfrac12`$ | 0.62 | (0.67) | 2.0 | 38.7 | 0.62 [0.58, 0.65] |
+| value shaping | 1 | 0.69 | (0.76) | 1.4 | 34.9 | 0.67 [0.60, 0.74] |
+| decision biasing | 0 | 0.05 | (0.37) | 18.9 | 44.5 | 0.04 [0.03, 0.05] |
+| decision biasing | $`\tfrac12`$ | 0.04 | (0.37) | 14.1 | 36.1 | 0.03 [0.02, 0.04] |
+| decision biasing | 1 | 0.06 | (0.30) | 3.8 | 22.6 | 0.03 [−0.00, 0.05] |
 
 **Value shaping transmits restraint at every $`\lambda`$, and the returns follow
 the dilemma.** Compared with an asocial student, a value-shaping student's own
@@ -370,35 +371,42 @@ return and the collective return change by:
 | $`\tfrac12`$ | $`-7.5`$ | $`+2.3`$ | a social dilemma: the student pays, the group gains |
 | 1 | $`+1.6`$ | $`+6.6`$ | restraint pays the student and the group |
 
-**Decision biasing raises the measured rate, but not the protection of the
-resource.** Following the teacher leads the student to more last apples, which
-its own values then take: last apples taken do not fall at $`\lambda = \tfrac12`$
-and rise at $`\lambda = 1`$, where all four patches are lost in 93% of episodes
-(asocial: 13%). Its restraint exists only while the teacher is visible: it
-drops when observation is switched off halfway, and with the teacher never
-observed it is 0.17, 0.00 and 0.00.
+**Decision biasing transmits almost nothing.** Its students leave a last apple
+to follow the teacher, then come back and take it later. Counted per
+encounter, each departure looked like restraint (about 0.35); counted per
+apple, almost every apple is eventually eaten (0.04–0.06). The outcomes agree:
+last apples taken do not fall at $`\lambda = \tfrac12`$ and rise at
+$`\lambda = 1`$, where all four patches are lost in 93% of episodes (asocial:
+13%), because following the teacher leads the student to more last apples.
 
-**Transmitted restraint persists after the teacher is removed, eroding most
-where it is costly.** After 300 further episodes of learning without the
-teacher (restraint per encounter):
+**Transmitted restraint persists after the teacher is removed, but the more it
+costs the student, the faster it wears away.** Restraint per apple before and
+after 300 further episodes of learning without the teacher:
 
 | | $`\lambda = 0`$ | $`\lambda = \tfrac12`$ | $`\lambda = 1`$ |
 |---|---|---|---|
-| value shaping, before → after | 0.83 → 0.74 | 0.67 → 0.55 | 0.76 → 0.78 |
-| decision biasing, before → after | 0.37 → 0.08 | 0.37 → 0.02 | 0.30 → 0.95 * |
-| asocial, after | 0.04 | 0.07 | 0.01 |
+| cost of restraint $`\Delta`$ (with this teacher) | $`+0.94`$ | $`+0.18`$ | $`-0.63`$ |
+| value shaping, before → after | 0.65 → 0.41 | 0.62 → 0.46 | 0.69 → 0.75 |
+| decision biasing, before → after | 0.05 → 0.05 | 0.04 → 0.02 | 0.06 → 0.56 * |
+| asocial, after | 0.00 | 0.00 | 0.01 |
 
-Value-shaping restraint does not erode where it pays the student
-($`\lambda = 1`$) and erodes most where it costs the student reward
-($`\lambda = \tfrac12`$). Decision-biasing restraint disappears.
+Where restraint is pure cost ($`\lambda = 0`$) the student's own reward erodes it
+most; where it pays ($`\lambda = 1`$) it holds and even grows slightly. With
+three runs this is a pattern for the full design to test, not a finding.
 
-\* This value is an artefact. These students alternate between two cells beside
-a last apple, a loop caused by two different cells mapping to states whose best
-actions point at each other, and every return starts a new encounter: up to 121
-encounters per episode against about 3 for asocial students. They do take fewer
-last apples than before removal (about 2 per episode instead of 3.4–3.9), so
-part of the effect may be real. This finding is why restraint is now also
-measured per apple.
+\* An odd case. After removal these students alternate between two cells
+beside last apples, a loop caused by two different cells mapping to states
+whose best actions point at each other. Per encounter this read as 0.95,
+because every return starts a new encounter (up to 121 per episode, against
+about 3 for asocial students); per apple it is 0.56. They do leave about half
+the last apples they reach, but by looping rather than by a sensible policy:
+their own return (9.0) is lower than an asocial student's after the same
+phase (11.3). This case is why restraint is measured per apple.
+
+**Restraint depends on the partner.** With learning off, value-shaping
+students leave fewer last apples beside a greedy agent (per apple 0.31, 0.16,
+0.21) or a naive learner (0.56, 0.42, 0.36) than beside their teacher (0.65,
+0.62, 0.69).
 
 **Restraint here looks like waiting, not passivity.** Once every patch is down
 to its last apple, nothing is harvestable for 86–93% of steps, and the scripted

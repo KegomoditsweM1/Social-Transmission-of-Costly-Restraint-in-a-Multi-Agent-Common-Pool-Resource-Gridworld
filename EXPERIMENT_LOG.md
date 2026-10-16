@@ -637,3 +637,54 @@ Format: date, what and why, exact command, result, decision.
 - **Next:** supervisor update (findings, the measurement amendment, the three
   provisional Phase 3 settings), then plan the full design (three teacher
   levels, number of runs from the pilot's run times and variability).
+
+## 2026-10-16 — E15: pilot re-measured with per-apple restraint
+
+- **Command:** `python scripts/phase3_eval.py results/pilot --force --reuse-post`
+  (27 ok, 51 min; the saved post-removal Q-tables were reused), then
+  `python scripts/summarise_phase3.py results/pilot`. Check
+  `asocial full = half = off`: OK.
+- **Result, restraint per apple** (means over 3 seeds, 95% bootstrap CI; per
+  encounter in brackets):
+
+  | condition | λ | A_full | post-removal | CT | retained after removal |
+  |---|---|---|---|---|---|
+  | asocial | 0 / ½ / 1 | 0.002 / 0.001 / 0.022 | 0.003 / 0.004 / 0.012 | | |
+  | value shaping | 0 | 0.652 (0.834) | 0.414 (0.742) | 0.650 [0.565, 0.727] | 0.411 [0.243, 0.500] |
+  | value shaping | ½ | 0.622 (0.671) | 0.462 (0.553) | 0.621 [0.576, 0.654] | 0.458 [0.439, 0.484] |
+  | value shaping | 1 | 0.687 (0.758) | 0.745 (0.777) | 0.665 [0.601, 0.736] | 0.733 [0.614, 0.828] |
+  | decision biasing | 0 | 0.053 (0.374) | 0.048 (0.080) | 0.038 [0.033, 0.045] | 0.045 [−0.002, 0.125] |
+  | decision biasing | ½ | 0.038 (0.369) | 0.015 (0.016) | 0.033 [0.023, 0.039] | 0.011 [−0.004, 0.023] |
+  | decision biasing | 1 | 0.055 (0.302) | 0.564 (0.947) | 0.026 [−0.003, 0.048] | 0.552 [0.401, 0.671] |
+
+  Partner test, value shaping, per apple (λ = 0 / ½ / 1): own teacher
+  0.652 / 0.622 / 0.687; greedy agent 0.308 / 0.158 / 0.211; naive learner
+  0.558 / 0.417 / 0.359.
+- **Conclusions (exploratory, 3 seeds):**
+  - **Value shaping:** transmission is robust to the measure (per apple
+    0.62–0.69 vs 0.67–0.83 per encounter); CT intervals far from 0 at every λ.
+  - **Decision biasing:** per apple, transmission is negligible
+    (CT 0.026–0.038; the λ = 1 interval includes 0). Its students leave a last
+    apple to follow the teacher and come back to take it later; the
+    per-encounter rate (≈ 0.35) counted each departure as restraint. This
+    agrees with the outcome measures (last apples taken did not fall).
+  - **Persistence ordered by cost:** after removal, value-shaping restraint
+    per apple changes by −0.24 at λ = 0 (Δ = +0.94), −0.16 at λ = ½
+    (Δ = +0.18) and +0.06 at λ = 1 (Δ = −0.63). The more restraint costs the
+    student, the faster its own reward erodes it. A pattern for the full
+    design to test, not a finding.
+  - **Decision biasing at λ = 1 after removal:** 0.947 per encounter is mostly
+    oscillation (E14); 0.564 per apple remains, far above asocial students
+    after the same phase (0.012), but produced by looping beside last apples,
+    with a lower own return than asocial students (9.04 vs 11.25). Reported as
+    an odd case, not as transmission.
+  - **Partners:** value-shaping restraint is lower beside a greedy agent or a
+    naive learner than beside the teacher; per apple shows this more clearly
+    than per encounter.
+- **Decision (pending supervisor):** use restraint per apple as the primary
+  measure in the full design and report per encounter alongside (amendment
+  proposed in E14, motivated by the pilot).
+- **README:** pilot results updated with per-apple values and intervals.
+- **Next:** supervisor update (findings, the measurement amendment, the three
+  provisional Phase 3 settings), then plan the full design (three teacher
+  levels, number of runs from the pilot's run times and variability).
