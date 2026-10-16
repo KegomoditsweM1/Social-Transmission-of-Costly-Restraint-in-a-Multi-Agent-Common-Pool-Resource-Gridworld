@@ -137,9 +137,10 @@ The learner's state is a compact summary of what it sees (90 states):
 | protected direction | 5 | direction of the nearest last apple, or none |
 | protected adjacent | 2 | whether that last apple is one step away (a restraint opportunity) |
 
-### Social learning mechanisms *(in development)*
+### Social learning mechanisms
 
-Two non-inferential mechanisms let the student use what it observes.
+Two non-inferential mechanisms let the student use what it observes. Neither
+gives it access to the teacher's rewards or values.
 
 **Value shaping** raises the value of each state-action pair $`(s_e, a_e)`$ the
 teacher is observed to take:
@@ -155,7 +156,15 @@ moves towards the teacher's last observed position:
 \pi_{\mathrm{DB}} = (1-\omega)\,\pi_{\mathrm{asoc}} + \omega\,\pi_{\mathrm{soc}}.
 ```
 
-An **asocial** student, which ignores the teacher, is the control.
+An **asocial** student, which receives no information about the teacher, is the
+control. Value shaping acts only through learning; decision biasing acts at the
+moment of choice, during training and evaluation alike.
+
+The strengths $`\kappa`$ and $`\omega`$ were fixed before the main runs by a rule
+chosen in advance: at $`\lambda = 0`$, with the fully restrained teacher, pick the
+value that transmits **partially**, closest to halfway between the asocial
+student and the teacher. This gave $`\kappa = 0.03`$ and $`\omega = 0.5`$, held
+fixed in every condition.
 
 ---
 
@@ -174,6 +183,20 @@ one decision, however long it lasts. For agent $`i`$,
 excluding encounters ended by the other agent taking the apple first. A
 per-step variant, counting every step spent beside a last apple, is reported as
 a secondary measure; it is inflated when a restrained agent waits.
+
+The pilot showed that the encounter count can be inflated too: a learner that
+steps back and forth beside a last apple starts a new encounter on every
+return (see Results). Restraint is therefore also measured **per apple**, where
+each last apple counts once however often the agent comes back to it:
+
+```math
+\mathrm{Res}^{\mathrm{apple}}_i = 1 - \frac{\text{last apples taken by } i}{\text{distinct last apples } i \text{ was next to}},
+```
+
+where a "last apple" is one patch's spell in the last-apple state, from the
+moment the patch is reduced to one apple until that apple is taken or the patch
+regrows, and apples taken first by the other agent are excluded. Both rates are
+reported.
 
 Restraint is always read together with **collective return**, **survival time**
 (steps until every patch is empty) and **patch losses by cause**, including
@@ -211,7 +234,18 @@ since the learner values every state it visits, not only the first.
 Undiscounted returns and returns discounted from the start of the episode are
 also reported.
 
-### Transmission *(in development)*
+### Transmission, persistence and partners
+
+Every trained student is evaluated with learning switched off, on the same
+evaluation episodes, in these settings:
+
+| Setting | What changes | What it measures |
+|---|---|---|
+| full | the student observes the teacher throughout | $`A_{\mathrm{full}}`$ |
+| half | observation is switched off halfway through each episode | $`A_{\mathrm{half}}`$ |
+| off | the student never observes the teacher | behaviour without the teacher's information |
+| after removal | the student **keeps learning** for 300 episodes without observing the teacher, then is evaluated | whether restraint **persists** when only the student's own reward shapes it |
+| partners | the student plays beside a greedy agent, or beside a naive learner that learns as it plays | whether restraint holds with different partners |
 
 Transmission is measured with the **cultural transmission** metric, applied to
 restraint:
@@ -223,7 +257,13 @@ restraint:
 where $`A_{\mathrm{full}}`$, $`A_{\mathrm{half}}`$ and $`A_{\mathrm{solo}}`$ are the
 student's restraint with the teacher observable throughout, observable for the
 first half of each episode, and never observable (the asocial student), and $`E`$
-is the teacher's own restraint. $`\mathrm{CT} = 1`$ means the student matched the teacher.
+is the teacher's own restraint. $`\mathrm{CT} = 1`$ means the student matched the
+teacher, and a confidence interval that includes zero means no evidence of
+transmission. Because $`\mathrm{CT}`$ divides by the teacher's own restraint, the
+effect of the teacher's level is compared with the **raw gain**
+$`A_{\mathrm{full}} - A_{\mathrm{solo}}`$ instead. The unit of analysis is the
+independent training run; results are means with 95% bootstrap confidence
+intervals over runs.
 
 ---
 
@@ -301,14 +341,81 @@ adjacent, and often waits beside one for several steps. The measured rates,
 not $`\rho`$, are the teacher levels. Even 43% restraint destroys the resource
 in most episodes: at $`\lambda = 1`$ a single lapse kills a patch for good.
 
+### Pilot: does restraint transmit? *(3 runs per condition; exploratory)*
+
+Students were trained for 600 episodes beside the fully restrained teacher
+($`\rho = 1`$) at each $`\lambda`$. With only three runs per condition these
+results show what the full design should test; they are not strong evidence.
+Restraint below is **per encounter**; the per-apple values are being measured.
+
+| | $`\lambda`$ | Restraint $`A_{\mathrm{full}}`$ | Last apples taken per episode | Collective return | CT [95% CI] |
+|---|---|---|---|---|---|
+| asocial | 0 | 0.04 | 21.6 | 45.3 | |
+| asocial | $`\tfrac12`$ | 0.02 | 13.7 | 36.4 | |
+| asocial | 1 | 0.03 | 2.7 | 28.2 | |
+| value shaping | 0 | 0.83 | 2.5 | 38.9 | 0.79 [0.71, 0.88] |
+| value shaping | $`\tfrac12`$ | 0.67 | 2.0 | 38.7 | 0.65 [0.63, 0.68] |
+| value shaping | 1 | 0.76 | 1.4 | 34.9 | 0.73 [0.65, 0.80] |
+| decision biasing | 0 | 0.37 | 18.9 | 44.5 | 0.28 [0.20, 0.34] |
+| decision biasing | $`\tfrac12`$ | 0.37 | 14.1 | 36.1 | 0.30 [0.28, 0.32] |
+| decision biasing | 1 | 0.30 | 3.8 | 22.6 | 0.26 [0.22, 0.30] |
+
+**Value shaping transmits restraint at every $`\lambda`$, and the returns follow
+the dilemma.** Compared with an asocial student, a value-shaping student's own
+return and the collective return change by:
+
+| $`\lambda`$ | Student | Collective | Reading |
+|---|---|---|---|
+| 0 | $`-14.2`$ | $`-6.4`$ | restraint is wasted: patches regrow anyway |
+| $`\tfrac12`$ | $`-7.5`$ | $`+2.3`$ | a social dilemma: the student pays, the group gains |
+| 1 | $`+1.6`$ | $`+6.6`$ | restraint pays the student and the group |
+
+**Decision biasing raises the measured rate, but not the protection of the
+resource.** Following the teacher leads the student to more last apples, which
+its own values then take: last apples taken do not fall at $`\lambda = \tfrac12`$
+and rise at $`\lambda = 1`$, where all four patches are lost in 93% of episodes
+(asocial: 13%). Its restraint exists only while the teacher is visible: it
+drops when observation is switched off halfway, and with the teacher never
+observed it is 0.17, 0.00 and 0.00.
+
+**Transmitted restraint persists after the teacher is removed, eroding most
+where it is costly.** After 300 further episodes of learning without the
+teacher (restraint per encounter):
+
+| | $`\lambda = 0`$ | $`\lambda = \tfrac12`$ | $`\lambda = 1`$ |
+|---|---|---|---|
+| value shaping, before → after | 0.83 → 0.74 | 0.67 → 0.55 | 0.76 → 0.78 |
+| decision biasing, before → after | 0.37 → 0.08 | 0.37 → 0.02 | 0.30 → 0.95 * |
+| asocial, after | 0.04 | 0.07 | 0.01 |
+
+Value-shaping restraint does not erode where it pays the student
+($`\lambda = 1`$) and erodes most where it costs the student reward
+($`\lambda = \tfrac12`$). Decision-biasing restraint disappears.
+
+\* This value is an artefact. These students alternate between two cells beside
+a last apple, a loop caused by two different cells mapping to states whose best
+actions point at each other, and every return starts a new encounter: up to 121
+encounters per episode against about 3 for asocial students. They do take fewer
+last apples than before removal (about 2 per episode instead of 3.4–3.9), so
+part of the effect may be real. This finding is why restraint is now also
+measured per apple.
+
+**Restraint here looks like waiting, not passivity.** Once every patch is down
+to its last apple, nothing is harvestable for 86–93% of steps, and the scripted
+teacher stands still for most of the episode. Value-shaping students wait
+beside the last apple, but almost never stand still while an ordinary apple is
+in view (0.3–0.6% of steps; the teacher 3–7%). Their loss of return is the last
+apples they leave, not food they ignore.
+
 ## Project status
 
 | Stage | Contents | Status |
 |---|---|---|
 | Environment | gridworld, scripted policies, social-dilemma validation | complete |
 | Teacher | tabular Q-learner, teacher training, three measured teacher levels | complete |
-| Students | asocial, value shaping, decision biasing; parameter selection; pilot | next |
-| Evaluation | transmission, persistence after the teacher is removed, partner tests, analysis | planned |
+| Students | asocial, value shaping, decision biasing; parameter selection; pilot | complete |
+| Evaluation | transmission, persistence after the teacher is removed, partner tests | built; pilot complete |
+| Full design | three teacher levels × three $`\lambda`$ × three conditions, more runs; analysis and report | next |
 
 ---
 
@@ -323,11 +430,19 @@ agents/                   learning agents
   features.py             the learner's state; wall mask
   q_learner.py            tabular Q-learning with softmax
   runner.py               training and evaluation episodes; frozen teacher
+  social.py               value shaping and decision biasing
 scripts/
   check_gate.py           social-dilemma validation and the cost of restraint
   train_teacher.py        train a Q-learner teacher alone
   make_teacher_levels.py  build and measure the three teacher levels
-  view.py                 graphical viewer
+  train_student.py        train one student beside the teacher
+  run_batch.py            train many students in parallel (resumable)
+  summarise_students.py   summarise trained students by condition
+  select_social_param.py  choose kappa and omega by the rule fixed in advance
+  stillness_check.py      teacher and student stillness: waiting or passivity?
+  phase3_eval.py          transmission, persistence after removal, partner tests
+  summarise_phase3.py     CT, raw gain and persistence with bootstrap intervals
+  view.py                 graphical viewer; loads trained students; records MP4 video
 tests/                    unit and integration tests
 results/                  outputs, kept in full, including unsuccessful runs
 EXPERIMENT_LOG.md         a dated record of every run and decision
@@ -373,7 +488,15 @@ python scripts/view.py --student restrained                 # restrained student
 python scripts/view.py --lam 0.5 --teacher mixed --rho 0.5  # a less restrained teacher
 ```
 
-Controls: SPACE pause, RIGHT one step, UP/DOWN speed, R new episode, S screenshot, ESC quit.
+Controls: SPACE pause, RIGHT one step, UP/DOWN speed, R new episode, S screenshot,
+V start/stop recording an MP4 video (saved in `results/videos/`), ESC quit.
+
+**Watch a trained student**, or record one directly:
+
+```bash
+python scripts/view.py --lam 0.5 --student-q results/pilot/value_shaping_k0.03_lam0.5_rho1.0_s0.npz --social
+python scripts/view.py --lam 0.5 --student-q <student>.npz --social --record clip.mp4 --record-steps 600
+```
 
 **Check that the environment is a social dilemma** and measure the cost of restraint:
 
@@ -391,6 +514,23 @@ python scripts/train_teacher.py --seed 0
 
 ```bash
 python scripts/make_teacher_levels.py --teacher scripted
+```
+
+**Train students** (one run, or a resumable batch in parallel) and summarise them:
+
+```bash
+python scripts/train_student.py --condition value_shaping --kappa 0.03 --lam 0.5 --seed 0
+python scripts/run_batch.py --conditions asocial value_shaping decision_biasing --kappa 0.03 --omega 0.5 \
+    --lams 0.0 0.5 1.0 --rho 1.0 --seeds 0 1 2 --out-dir results/pilot
+python scripts/summarise_students.py results/pilot
+```
+
+**Evaluate transmission, persistence and partners**, then summarise:
+
+```bash
+python scripts/phase3_eval.py results/pilot
+python scripts/summarise_phase3.py results/pilot
+python scripts/stillness_check.py results/pilot
 ```
 
 ---
