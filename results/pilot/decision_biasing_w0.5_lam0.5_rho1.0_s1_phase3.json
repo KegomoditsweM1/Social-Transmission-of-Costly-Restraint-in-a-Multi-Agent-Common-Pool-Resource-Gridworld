@@ -25,7 +25,8 @@
     "eval_episodes": 50,
     "eval_epsilon": 0.05,
     "switch_off_at": 750,
-    "seconds": 544
+    "reused_post_qtable": true,
+    "seconds": 351
   },
   "measures": {
     "full": {
@@ -42,7 +43,11 @@
       "partner_protected_taken_per_ep": 0.0,
       "partner_return": 18.6,
       "partner_patch_deaths_per_ep": 0.0,
-      "collective_return": 35.980000000000004
+      "collective_return": 35.980000000000004,
+      "student_restraint_apple": 0.04293628808864269,
+      "student_apples_met_per_ep": 14.44,
+      "partner_restraint_apple": 1.0,
+      "partner_apples_met_per_ep": 1.68
     },
     "half": {
       "episodes": 50,
@@ -59,6 +64,10 @@
       "partner_return": 17.94,
       "partner_patch_deaths_per_ep": 0.0,
       "collective_return": 36.42,
+      "student_restraint_apple": 0.0382436260623229,
+      "student_apples_met_per_ep": 14.12,
+      "partner_restraint_apple": 1.0,
+      "partner_apples_met_per_ep": 2.12,
       "student_restraint_first_half": 0.39193548387096777,
       "student_restraint_second_half": 0.0
     },
@@ -76,7 +85,11 @@
       "partner_protected_taken_per_ep": 0.0,
       "partner_return": 15.74,
       "partner_patch_deaths_per_ep": 0.0,
-      "collective_return": 37.0
+      "collective_return": 37.0,
+      "student_restraint_apple": 0.0,
+      "student_apples_met_per_ep": 13.46,
+      "partner_restraint_apple": 1.0,
+      "partner_apples_met_per_ep": 2.34
     },
     "partner_teacher": {
       "episodes": 50,
@@ -92,7 +105,11 @@
       "partner_protected_taken_per_ep": 0.0,
       "partner_return": 15.74,
       "partner_patch_deaths_per_ep": 0.0,
-      "collective_return": 37.0
+      "collective_return": 37.0,
+      "student_restraint_apple": 0.0,
+      "student_apples_met_per_ep": 13.46,
+      "partner_restraint_apple": 1.0,
+      "partner_apples_met_per_ep": 2.34
     },
     "post": {
       "episodes": 50,
@@ -108,7 +125,11 @@
       "partner_protected_taken_per_ep": 0.0,
       "partner_return": 16.06,
       "partner_patch_deaths_per_ep": 0.0,
-      "collective_return": 37.459999999999994
+      "collective_return": 37.459999999999994,
+      "student_restraint_apple": 0.0,
+      "student_apples_met_per_ep": 11.46,
+      "partner_restraint_apple": 1.0,
+      "partner_apples_met_per_ep": 2.92
     },
     "partner_greedy": {
       "episodes": 50,
@@ -124,7 +145,11 @@
       "partner_protected_taken_per_ep": 12.58,
       "partner_return": 21.84,
       "partner_patch_deaths_per_ep": 12.58,
-      "collective_return": 35.68
+      "collective_return": 35.68,
+      "student_restraint_apple": 0.0,
+      "student_apples_met_per_ep": 6.52,
+      "partner_restraint_apple": 0.0,
+      "partner_apples_met_per_ep": 12.58
     },
     "partner_naive": {
       "episodes": 50,
@@ -140,7 +165,11 @@
       "partner_protected_taken_per_ep": 6.88,
       "partner_return": 15.8,
       "partner_patch_deaths_per_ep": 6.88,
-      "collective_return": 36.44
+      "collective_return": 36.44,
+      "student_restraint_apple": 0.0,
+      "student_apples_met_per_ep": 11.18,
+      "partner_restraint_apple": 0.022727272727272707,
+      "partner_apples_met_per_ep": 7.04
     }
   }
 }
