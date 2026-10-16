@@ -361,6 +361,8 @@ Intervals are 95% bootstrap intervals over runs.
 | decision biasing | $`\tfrac12`$ | 0.04 | (0.37) | 14.1 | 36.1 | 0.03 [0.02, 0.04] |
 | decision biasing | 1 | 0.06 | (0.30) | 3.8 | 22.6 | 0.03 [−0.00, 0.05] |
 
+![Restraint by condition, per apple and per encounter](results/pilot/figures/1_restraint_by_condition.png)
+
 **Value shaping transmits restraint at every $`\lambda`$, and the returns follow
 the dilemma.** Compared with an asocial student, a value-shaping student's own
 return and the collective return change by:
@@ -394,6 +396,8 @@ Where restraint is pure cost ($`\lambda = 0`$) the student's own reward erodes i
 most; where it pays ($`\lambda = 1`$) it holds and even grows slightly. With
 three runs this is a pattern for the full design to test, not a finding.
 
+![Restraint before and after the teacher is removed](results/pilot/figures/3_persistence.png)
+
 \* An odd case. After removal these students alternate between two cells
 beside last apples, a loop caused by two different cells mapping to states
 whose best actions point at each other. Per encounter this read as 0.95,
@@ -402,6 +406,8 @@ about 3 for asocial students); per apple it is 0.56. They do leave about half
 the last apples they reach, but by looping rather than by a sensible policy:
 their own return (9.0) is lower than an asocial student's after the same
 phase (11.3). This case is why restraint is measured per apple.
+
+![Per-encounter against per-apple restraint for every run](results/pilot/figures/5_encounter_inflation.png)
 
 **Restraint depends on the partner.** With learning off, value-shaping
 students leave fewer last apples beside a greedy agent (per apple 0.31, 0.16,
@@ -415,6 +421,50 @@ beside the last apple, but almost never stand still while an ordinary apple is
 in view (0.3–0.6% of steps; the teacher 3–7%). Their loss of return is the last
 apples they leave, not food they ignore.
 
+### What the pilot suggests
+
+These readings rest on three runs, one teacher level and one strength of each
+mechanism, so they are hypotheses for the full design rather than conclusions.
+
+- **Observation can transmit a behaviour the learner's own reward opposes.**
+  At $`\lambda = 0`$ and $`\lambda = \tfrac12`$ taking the last apple pays the
+  student, yet value-shaping students left most last apples. The social bonus
+  acts like a prior in the student's values, which its own reward must then
+  overcome.
+- **What is copied matters.** Value shaping changes what the learner values and
+  transmits restraint. Decision biasing changes where the learner goes and
+  transmits proximity instead: following a restrained teacher leads the student
+  to temptation without the values to resist it, and at $`\lambda = 1`$ it
+  damages the resource more than learning alone.
+- **The cost of restraint seems to govern persistence more than acquisition.**
+  Transmission was similar at every $`\lambda`$, but once the student learned on
+  its own, restraint eroded in proportion to its cost. Where restraint pays but
+  is hard to discover alone ($`\lambda = 1`$), observation lets the learner reach
+  a policy it would not find by itself, and its own reward then keeps it.
+- **A restraint rate must be read against the resource.** Waiting inflates
+  per-step rates and back-and-forth movement inflates per-encounter rates; last
+  apples taken and collective return show what actually happened.
+
+### Open questions and next experiments
+
+- **Is it restraint, or copied waiting?** The teacher stands still most of the
+  time, so value shaping might transmit waiting, with restraint as a side
+  effect. A control teacher that moves and waits exactly like the restrained
+  teacher but always takes the last apple ($`\rho = 0`$) separates the two:
+  value-shaping students beside it should show no gain in restraint. *(Running.)*
+- **H2: do more restrained teachers transmit more?** Students beside the teacher
+  levels $`\rho = 0.5`$ and $`0.75`$. *(Running.)*
+- **Full design:** all three teacher levels × three $`\lambda`$ × three conditions,
+  on fresh seeds, with the predictions above written down before it runs.
+- **Robustness:** the alternative strengths fixed in advance ($`\kappa = 0.1`$,
+  $`\omega = 0.3`$), the evaluation's random-move rate, and longer training.
+
+**Limitations.** The cost of restraint $`\Delta`$ is measured with scripted
+students, not the learners; the scripted teacher sees the whole grid while the
+student sees part of it, which partly explains why students wait beside last
+apples; the three-feature state causes the looping described above; and the
+study uses one small environment.
+
 ## Project status
 
 | Stage | Contents | Status |
@@ -423,7 +473,8 @@ apples they leave, not food they ignore.
 | Teacher | tabular Q-learner, teacher training, three measured teacher levels | complete |
 | Students | asocial, value shaping, decision biasing; parameter selection; pilot | complete |
 | Evaluation | transmission, persistence after the teacher is removed, partner tests | built; pilot complete |
-| Full design | three teacher levels × three $`\lambda`$ × three conditions, more runs; analysis and report | next |
+| Pilot extensions | teacher levels $`\rho = 0.5, 0.75`$ (H2) and the $`\rho = 0`$ control | running |
+| Full design | three teacher levels × three $`\lambda`$ × three conditions on fresh seeds; analysis and report | next |
 
 ---
 
@@ -450,6 +501,7 @@ scripts/
   stillness_check.py      teacher and student stillness: waiting or passivity?
   phase3_eval.py          transmission, persistence after removal, partner tests
   summarise_phase3.py     CT, raw gain and persistence with bootstrap intervals
+  make_figures.py         all figures, from a results folder
   view.py                 graphical viewer; loads trained students; records MP4 video
 tests/                    unit and integration tests
 results/                  outputs, kept in full, including unsuccessful runs
@@ -539,6 +591,12 @@ python scripts/summarise_students.py results/pilot
 python scripts/phase3_eval.py results/pilot
 python scripts/summarise_phase3.py results/pilot
 python scripts/stillness_check.py results/pilot
+```
+
+**Make the figures** (saved in `results/pilot/figures/`):
+
+```bash
+python scripts/make_figures.py results/pilot
 ```
 
 ---
