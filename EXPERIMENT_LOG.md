@@ -557,6 +557,15 @@ Format: date, what and why, exact command, result, decision.
   and collective return rises (32.8 vs 29.1 for asocial students after removal).
   Milder inflation also appears for value shaping at λ = 0, seed 1
   (35 encounters per episode vs about 10 for the other seeds).
+- **Video check** (decision biasing, λ = 1, seed 0, post-removal Q-table, greedy,
+  600 steps; illustration): the student alternates between two vertically
+  adjacent cells for long spells ((0,5)↔(1,5) about 120 steps; (0,2)↔(1,2)
+  about 300 steps, on the edge of a patch), visits only 17 cells and harvests 1
+  apple (return 1; teacher 25). A deterministic 2-step loop caused by state
+  aliasing in the 3-feature state; beside a live last apple each return
+  starts a new encounter, which explains the inflated per-encounter rate.
+  Without the 5% evaluation random moves the student stays trapped in such
+  loops; with them it breaks out often enough to reach a return of about 9.
 - **Measurement amendment (before the full design):** added restraint PER APPLE:
   each last apple (one patch's spell in the last-apple state, until the apple is
   taken or the patch regrows) counts once per agent, however often the agent
