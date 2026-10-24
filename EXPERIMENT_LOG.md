@@ -762,3 +762,57 @@ Format: date, what and why, exact command, result, decision.
 - **Next:** decide between running the H2 extension (ρ = 0.5, 0.75) on the pilot
   seeds or going straight to the full design on fresh seeds, which includes
   those teacher levels.
+
+## 2026-10-24 — E17: ρ = 0 control (does the student copy restraint, or only waiting?)
+
+- **What and why:** a control teacher π_T^0 that moves and waits exactly like the
+  restrained teacher but always takes an adjacent last apple (teacher restraint
+  E = 0). If value-shaping students picked up only the teacher's movement and
+  waiting, they would show the same "restraint" beside this teacher as beside
+  the restrained one. Asocial and value shaping (κ = 0.03), λ ∈ {0, ½, 1}, seeds
+  0–2, 600 training episodes (18 students).
+- **Commands:**
+  `python scripts/run_batch.py --conditions asocial value_shaping --kappa 0.03 --lams 0.0 0.5 1.0 --rho 0.0 --seeds 0 1 2 --out-dir results/pilot`,
+  then `phase3_eval.py` (18 ok, 61 min with 3 workers), `summarise_phase3.py`,
+  `make_figures.py`. Check `asocial full = half = off`: OK. CT is undefined at
+  E = 0, so the raw gain A_full − A_solo is reported (scripts patched for this
+  before the run).
+- **Result, restraint per apple** (means over 3 seeds, 95% bootstrap CI):
+
+  | λ | gain, teacher ρ = 0 | gain, teacher ρ = 1 | retained after removal, ρ = 0 | retained after removal, ρ = 1 |
+  |---|---|---|---|---|
+  | 0 | 0.070 [−0.002, 0.195] | 0.650 [0.565, 0.727] | 0.026 [0.001, 0.074] | 0.411 [0.243, 0.500] |
+  | ½ | 0.124 [0.086, 0.165] | 0.621 [0.576, 0.654] | 0.058 [0.003, 0.090] | 0.458 [0.439, 0.484] |
+  | 1 | 0.214 [0.131, 0.280] | 0.665 [0.601, 0.736] | −0.117 [−0.268, 0.055] | 0.733 [0.614, 0.828] |
+
+  Value-shaping students beside the ρ = 0 teacher took fewer last apples per
+  episode than asocial students (7.3 vs 13.9; 3.9 vs 9.6; 1.2 vs 1.8) and earned
+  less (16.2 vs 21.7; 12.4 vs 17.0; 7.8 vs 9.0).
+- **Conclusions (exploratory, 3 seeds):**
+  - **Most of the transmitted restraint is specific to a restrained teacher.**
+    At every λ the gain with the restrained teacher is 3 to 9 times the gain
+    with the control teacher, and the intervals do not overlap.
+  - **A smaller, non-specific part exists.** Beside a teacher that never
+    restrains, value-shaping students still left some last apples (intervals
+    exclude 0 at λ = ½ and 1). Likely cause: value shaping also raises the value
+    of the teacher's waiting and approach moves, making students more passive in
+    general (they also earned less than asocial students). It grows with λ
+    (0.07, 0.12, 0.21).
+  - **The non-specific part does not persist.** After removal it is near 0
+    (0.03, 0.06, −0.12), whereas restraint learned from the restrained teacher
+    persists (0.41, 0.46, 0.73). What persists is restraint-specific.
+  - **Better estimate of restraint-specific transmission:** gain(ρ = 1) −
+    gain(ρ = 0) ≈ 0.58, 0.50, 0.45 per apple (point estimates; no interval
+    computed yet).
+  - Per-encounter restraint is again inflated (value shaping at ρ = 0:
+    0.46 / 0.30 / 0.47 per encounter vs 0.07 / 0.12 / 0.24 per apple).
+- **Unexplained, to watch:** asocial students at λ = 1 beside the ρ = 0 teacher
+  reached restraint 0.25 [0.16, 0.35] per apple after the removal phase
+  (0.01 beside the restrained teacher), on few last apples (1.4 per episode). It
+  lowers the H3 baseline in that cell.
+- **Decision:** report the ρ = 0 gain alongside CT; in the full design, include
+  the ρ = 0 control and report restraint-specific transmission as
+  gain(ρ) − gain(0) with a bootstrap interval.
+- **Next:** decide between running the H2 extension (ρ = 0.5, 0.75) on the pilot
+  seeds or going straight to the full design on fresh seeds, which includes
+  those teacher levels.
