@@ -79,12 +79,13 @@ behaviour (looping, E14) is described, not tested.
 
 ## 4. Analysis
 
-- Run with the existing scripts:
+- Run in this order:
   `phase3_eval.py results/full`, `summarise_phase3.py results/full`,
-  `make_figures.py results/full`.
-- Before the results are looked at, `summarise_phase3.py` will be extended to
-  report S(ρ, λ) and the differences in P3, P4 and P5(b) with joint bootstrap
-  intervals. The extension is tested on the pilot data only.
+  `test_predictions.py results/full`, `make_figures.py results/full`.
+- `scripts/test_predictions.py` computes every quantity in P1–P6 with its
+  bootstrap interval and verdict, and writes `predictions.csv`. It was written
+  and tested before the full study, on the pilot data and on synthetic data
+  with known effects only, and is committed together with this plan.
 - **Exploratory, labelled as such:** partner tests, the per-encounter measure,
   learning curves, the asocial λ = 1 anomaly beside the ρ = 0 teacher (E17), and
   any pattern not listed above.
