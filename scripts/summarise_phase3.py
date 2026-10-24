@@ -36,6 +36,9 @@ Writes <folder>/phase3_runs.csv (one row per run) and <folder>/phase3_summary.cs
 
 from __future__ import annotations
 
+# Below this teacher restraint, CT (which divides by E) is treated as undefined.
+MIN_E = 0.02
+
 import argparse
 import csv
 import json
@@ -157,13 +160,19 @@ def main():
                 if any(math.isnan(v) for v in full + halfv + solo):
                     print(f"   [{label}] not available (re-run phase3_eval.py with --force --reuse-post)")
                     continue
-                ct = joint_ci(np.c_[full, halfv], solo,
-                              lambda s_, b: 0.5 * (s_[:, 0].mean() - b.mean()) / E_m
-                              + 0.5 * (s_[:, 1].mean() - b.mean()) / E_m)
                 gain = joint_ci(full, solo, lambda s_, b: s_.mean() - b.mean())
                 kept = joint_ci([r[f"post_{metric}"] for r in g], solo_post, lambda s_, b: s_.mean() - b.mean())
-                flag = "   <- CI includes 0: no evidence of transmission" if ct[1] <= 0 <= ct[2] else ""
-                print(f"   [{label:13s}] CT (Eq. 4) {fmt(ct)}{flag}")
+                if not E_m >= MIN_E:
+                    # CT divides by the teacher's own restraint E. A teacher that (almost) never
+                    # restrains, such as the rho = 0 control, makes CT undefined: report the gain only.
+                    ct = (float("nan"),) * 3
+                    print(f"   [{label:13s}] CT undefined: teacher restraint E = {E_m:.3f} < {MIN_E} (use the gain)")
+                else:
+                    ct = joint_ci(np.c_[full, halfv], solo,
+                                  lambda s_, b: 0.5 * (s_[:, 0].mean() - b.mean()) / E_m
+                                  + 0.5 * (s_[:, 1].mean() - b.mean()) / E_m)
+                    flag = "   <- CI includes 0: no evidence of transmission" if ct[1] <= 0 <= ct[2] else ""
+                    print(f"   [{label:13s}] CT (Eq. 4) {fmt(ct)}{flag}")
                 print(f"   [{label:13s}] gain A_full - A_solo (H2) {fmt(gain)}")
                 print(f"   [{label:13s}] retained after removal, A_post - A_solo_post (H3) {fmt(kept)}")
                 row.update({f"CT{suffix}": ct[0], f"CT{suffix}_lo": ct[1], f"CT{suffix}_hi": ct[2],

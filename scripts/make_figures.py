@@ -333,17 +333,20 @@ def ct_cells(runs, metric="student_restraint_apple"):
         full = [val(r, "full", metric) for r in rs]
         half = [val(r, "half", metric) for r in rs]
         solo = [val(r, "full", metric) for r in a]
-        if any(math.isnan(v) for v in full + half + solo) or not E:
+        if any(math.isnan(v) for v in full + half + solo) or math.isnan(E):
             continue
-        ct = joint_ci(np.c_[full, half], solo,
-                      lambda s, b: 0.5 * (s[:, 0].mean() - b.mean()) / E + 0.5 * (s[:, 1].mean() - b.mean()) / E)
+        # CT divides by the teacher's restraint E; for a teacher that (almost) never restrains
+        # (the rho = 0 control) it is undefined, so only the gain is kept for that cell.
+        ct = (joint_ci(np.c_[full, half], solo,
+                       lambda s, b: 0.5 * (s[:, 0].mean() - b.mean()) / E + 0.5 * (s[:, 1].mean() - b.mean()) / E)
+              if E >= 0.02 else None)
         gain = joint_ci(full, solo, lambda s, b: s.mean() - b.mean())
         out[(c, lam, rho)] = {"ct": ct, "gain": gain, "E": E}
     return out
 
 
 def fig_h1(runs, delta, out):
-    cells = ct_cells(runs)
+    cells = {k: v for k, v in ct_cells(runs).items() if v["ct"] is not None}
     if not cells:
         print("  (no CT values: H1 figure skipped)")
         return False
