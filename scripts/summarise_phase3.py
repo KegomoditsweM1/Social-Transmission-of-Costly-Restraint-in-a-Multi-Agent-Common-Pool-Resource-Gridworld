@@ -134,7 +134,7 @@ def main():
         a = asocial.get((lam, rho), [])
         E = float(np.nanmean(teacher_E[(lam, rho)]))
         name = cond + (f" kappa={param}" if cond == "value_shaping" else f" omega={param}" if cond == "decision_biasing" else "")
-        print(f"\n=== {name}   lambda={lam}   rho={rho}   (n = {len(g)} runs; asocial n = {len(a)}; teacher E = {E:.3f})")
+        print(f"\n=== {name}   lambda={lam}   rho={rho}   (n = {len(g)} runs; asocial n = {len(a)}; teacher restraint per encounter = {E:.3f})")
         print(f"   {'measure':18s}{'restraint per encounter':>26s}{'restraint per apple':>26s}"
               f"{'last apples/ep':>16s}{'student ret':>13s}{'collective':>12s}")
         for k in MEASURES:
@@ -193,7 +193,8 @@ def main():
         w.writeheader()
         w.writerows(summary)
     print(f"\nwrote {folder / 'phase3_runs.csv'} and {folder / 'phase3_summary.csv'}")
-    print("Note: with 3 runs per condition, bootstrap intervals are coarse (pilot only).")
+    n_runs = sorted({len(g) for g in groups.values()})
+    print(f"Note: {min(n_runs)}-{max(n_runs)} runs per condition; intervals are 95% bootstrap intervals over runs.")
 
 
 if __name__ == "__main__":

@@ -346,39 +346,38 @@ def ct_cells(runs, metric="student_restraint_apple"):
 
 
 def fig_h1(runs, delta, out):
-    cells = {k: v for k, v in ct_cells(runs).items() if v["ct"] is not None}
+    """CT against the cost of restraint for the fully restrained teacher only.
+    CT divides by the teacher's restraint E, so for weakly restrained teachers
+    (E per apple about 0.1-0.3) it is unstable; those cells are in figure 8 as raw gains."""
+    cells = {k: v for k, v in ct_cells(runs).items() if v["ct"] is not None and k[2] == 1.0}
     if not cells:
-        print("  (no CT values: H1 figure skipped)")
+        print("  (no CT values for rho = 1: H1 figure skipped)")
         return False
     conds = [c for c in ORDER if any(k[0] == c for k in cells)]
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
-    for ax, only_pos in ((axes[0], False), (axes[1], True)):
-        ax.axhline(0, color=INK2, linewidth=1)
-        for (c, lam, rho), v in sorted(cells.items()):
-            if only_pos and lam == 0.0:
-                continue
-            if (lam, rho) not in delta:
-                continue
-            d, dlo, dhi = delta[(lam, rho)]
-            m, lo, hi = v["ct"]
-            label, colour, _ = COND[c]
+    fig, ax = plt.subplots(figsize=(6.8, 4.4))
+    ax.axhline(0, color=INK2, linewidth=1)
+    ax.axvline(0, color=GRID, linewidth=1, zorder=0)
+    for c in conds:
+        label, colour, _ = COND[c]
+        pts = sorted((delta[(lam, rho)], lam, v["ct"]) for (cc, lam, rho), v in cells.items()
+                     if cc == c and (lam, rho) in delta)
+        if not pts:
+            continue
+        ax.plot([p[0][0] for p in pts], [p[2][0] for p in pts], color=colour, linewidth=1.5, alpha=0.5, zorder=1)
+        for (d, dlo, dhi), lam, (m, lo, hi) in pts:
             ax.errorbar(d, m, xerr=[[d - dlo], [dhi - d]], yerr=[[m - lo], [hi - m]], fmt="none",
                         ecolor=colour, elinewidth=1.6, zorder=2)
-            ax.plot(d, m, marker=LAM_MARK.get(lam, "o"), markersize=8, color=colour,
+            ax.plot(d, m, marker=LAM_MARK.get(lam, "o"), markersize=9, color=colour,
                     markeredgecolor=SURFACE, markeredgewidth=1.5, linestyle="", zorder=3)
-            if len({k[2] for k in cells}) > 1:  # tag the teacher level only when there are several
-                ax.annotate(f"ρ={rho:g}", (d, m), xytext=(6, 4), textcoords="offset points", fontsize=8, color=INK2)
-        ax.axvline(0, color=GRID, linewidth=1, zorder=0)
-        ax.set_xlabel("cost of restraint Δ = R_d(1) − R_c(1)   (restraint costly →)")
-        ax.set_title("all λ" if not only_pos else "λ > 0 only (restraint protects the resource)")
-    axes[0].set_ylabel("CT per apple")
+    ax.set_xlabel("cost of restraint Δ = R_d(1) − R_c(1)   (restraint costly →)")
+    ax.set_ylabel("CT per apple")
+    ax.set_ylim(-0.1, 1.05)
     lam_handles = [Line2D([], [], color=INK2, marker=LAM_MARK[l], linestyle="", markersize=7, label=lam_name(l))
                    for l in sorted({k[1] for k in cells})]
     cond_handles = [Line2D([], [], color=COND[c][1], linewidth=3, label=COND[c][0]) for c in conds]
     bottom_legend(fig, cond_handles + lam_handles)
-    n_cells = len({(k[1], k[2]) for k in cells})
-    fig.suptitle(f"H1: transmission against the cost of restraint ({n_cells} (λ, ρ) cells; "
-                 "error bars: 95% CI on both axes)", color=INK, y=1.02)
+    fig.suptitle("H1: transmission against the cost of restraint\n"
+                 "(fully restrained teacher, ρ = 1; error bars: 95% CI on both axes)", color=INK, y=1.04)
     fig.savefig(out)
     plt.close(fig)
     return True
