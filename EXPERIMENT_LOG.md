@@ -773,8 +773,12 @@ Format: date, what and why, exact command, result, decision.
   block 2: seeds 1003–1004, 66 runs, ~4.3 h), `phase3_eval.py results/full`
   (165 ok, 8.5 h), `summarise_phase3.py`, `test_predictions.py`,
   `make_figures.py`. Check `asocial full = half = off`: OK.
-- **Teacher restraint per apple, measured in evaluation (E):** ρ = 0.5: 0.19 / 0.20 / 0.27;
-  ρ = 0.75: 0.31 / 0.32 / 0.41; ρ = 1: 1.00 (λ = 0 / ½ / 1).
+- **Teacher restraint measured in evaluation (E), λ = 0 / ½ / 1:**
+  per apple: ρ = 0.5: 0.12 / 0.12 / 0.19; ρ = 0.75: 0.20 / 0.21 / 0.29; ρ = 1: 1.00.
+  Per encounter (the "teacher E" printed in the summary headers): ρ = 0.5:
+  0.19 / 0.20 / 0.27; ρ = 0.75: 0.31 / 0.32 / 0.41. Per apple is lower because a
+  ρ < 1 teacher meets the same last apple several times and restrains each
+  time only with probability ρ, so it usually takes the apple in the end.
 - **Results by prediction** (restraint per apple, 95% bootstrap CI over 5 runs):
 
   | Prediction | Result | Verdict |
@@ -792,13 +796,15 @@ Format: date, what and why, exact command, result, decision.
   1 deviation.
 - **Interpretation (planned analyses above; points below marked EXPLORATORY):**
   - **Only a fully restrained teacher transmits restraint-specific behaviour.**
-    Beside teachers that restrain on 19–41% of last apples, value-shaping gains
+    Beside teachers that leave 12–29% of last apples, value-shaping gains
     (0.10–0.24) are no larger than beside the ρ = 0 control (0.11–0.18). The gain
-    is flat from E = 0 to E ≈ 0.4 and jumps at E = 1. EXPLORATORY explanation:
+    is flat from E = 0 to E ≈ 0.3 and much higher at E = 1. No teacher lies
+    between 0.3 and 1, so a sharp threshold cannot be told apart from a steep
+    rise in that range (teachers at ρ = 0.9 or 0.95 would separate them). EXPLORATORY explanation:
     value shaping adds κ to whatever the teacher does, so a teacher that sometimes
     takes the last apple raises the value of taking it as well as of waiting.
   - **CT is misleading for weakly restrained teachers.** It divides the gain by E;
-    with E ≈ 0.2–0.4, the non-specific gain gives CT above 1 for value shaping
+    with E ≈ 0.1–0.3 per apple, the non-specific gain gives CT above 1 for value shaping
     and the P6 "contradictions" for decision biasing. The decision-biasing gain
     itself is 0.01–0.05 in every cell, unrelated to teacher restraint.
     EXPLORATORY: report S and the raw gain as primary for ρ < 1.
@@ -818,6 +824,12 @@ Format: date, what and why, exact command, result, decision.
     (pilot 0.03–0.04); lower restraint beside a greedy partner
     (0.33 / 0.25 / 0.37) — EXPLORATORY.
 - **Minor:** `summarise_phase3.py` still prints "with 3 runs per condition …
-  (pilot only)"; stale message, to fix.
+  (pilot only)", and its "teacher E" header is per encounter although CT per
+  apple uses E per apple; both labels to fix.
+- **Figures:** figure 4 (learning curves) shows restraint per encounter only
+  (the per-apple tracker runs in evaluation, not training). Its returns panel
+  gives a learner-based view of the cost of restraint: value-shaping students
+  earn less than asocial students at λ = 0 and ½ and more at λ = 1, the same
+  order as Δ. Figure 7 is dominated by unstable CT values for ρ < 1.
 - **Next:** inspect figures 7 and 8; check decision-biasing encounter counts at
   λ = ½; write up; update README, website and supervisor.
