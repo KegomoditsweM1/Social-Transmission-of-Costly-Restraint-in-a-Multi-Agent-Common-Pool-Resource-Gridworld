@@ -1,0 +1,8 @@
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep    1  student return   6.40  restraint 0.44  teacher return  30.05  collective  36.45  (27s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep  100  student return  13.70  restraint 0.32  teacher return  22.80  collective  36.50  (146s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep  200  student return  12.90  restraint 0.31  teacher return  23.05  collective  35.95  (300s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep  300  student return  12.60  restraint 0.29  teacher return  23.35  collective  35.95  (459s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep  400  student return  14.90  restraint 0.36  teacher return  20.65  collective  35.55  (622s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep  500  student return  12.50  restraint 0.41  teacher return  22.80  collective  35.30  (786s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] ep  600  student return  13.35  restraint 0.37  teacher return  23.25  collective  36.60  (950s)
+[decision_biasing_w0.5_lam0.5_rho0.75_s1001] FINAL (50 eval episodes): student return 11.72  restraint 0.303  collective 36.48

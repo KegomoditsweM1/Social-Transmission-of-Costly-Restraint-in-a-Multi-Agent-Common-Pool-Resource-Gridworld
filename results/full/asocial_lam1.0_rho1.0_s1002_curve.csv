@@ -1,0 +1,8 @@
+episode,student_return,student_harvests,student_restraint,student_restraint_step,student_protected_taken_per_ep,student_encounters,student_opportunities,teacher_return,teacher_restraint,collective_return,fully_depleted_frac,patch_deaths_by_student_per_ep,patch_deaths_by_teacher_per_ep,patch_deaths_simultaneous_per_ep,student_wall_blocked_frac,student_agent_blocked_frac,student_longest_still_mean
+1,4.15,4.15,0.6428571428571428,0.719626168224299,1.5,84,107,30.75,1.0,34.9,0.0,1.5,0.0,0.0,0.0,0.0007,111.95
+100,10.3,10.3,0.0,0.0,3.4,68,68,16.8,1.0,27.1,0.5,3.4,0.0,0.0,0.0,0.0128,84.7
+200,12.6,12.6,0.0,0.0,3.3,66,66,13.65,1.0,26.25,0.5,3.3,0.0,0.0,0.0,0.0138,120.0
+300,11.45,11.45,0.0,0.0,3.0,60,60,15.35,1.0,26.799999999999997,0.25,3.0,0.0,0.0,0.0,0.0036,121.2
+400,11.85,11.85,0.0,0.0,2.75,55,55,16.1,1.0,27.950000000000003,0.2,2.75,0.0,0.25,0.0,0.023666666666666666,111.05
+500,12.3,12.3,0.0,0.0,2.65,53,53,15.65,1.0,27.950000000000003,0.25,2.65,0.0,0.2,0.0,0.0177,58.5
+600,11.45,11.45,0.0,0.0,2.95,59,59,15.35,1.0,26.799999999999997,0.35,2.95,0.0,0.2,0.0,0.012966666666666666,21.15

@@ -1,0 +1,8 @@
+[asocial_lam0.5_rho1.0_s1001] ep    1  student return   7.35  restraint 0.51  teacher return  29.90  collective  37.25  (30s)
+[asocial_lam0.5_rho1.0_s1001] ep  100  student return  19.50  restraint 0.00  teacher return  17.95  collective  37.45  (183s)
+[asocial_lam0.5_rho1.0_s1001] ep  200  student return  22.05  restraint 0.00  teacher return  13.95  collective  36.00  (343s)
+[asocial_lam0.5_rho1.0_s1001] ep  300  student return  19.30  restraint 0.00  teacher return  16.85  collective  36.15  (503s)
+[asocial_lam0.5_rho1.0_s1001] ep  400  student return  15.25  restraint 0.00  teacher return  20.45  collective  35.70  (660s)
+[asocial_lam0.5_rho1.0_s1001] ep  500  student return  20.05  restraint 0.00  teacher return  16.55  collective  36.60  (820s)
+[asocial_lam0.5_rho1.0_s1001] ep  600  student return  16.35  restraint 0.01  teacher return  20.95  collective  37.30  (979s)
+[asocial_lam0.5_rho1.0_s1001] FINAL (50 eval episodes): student return 16.10  restraint 0.000  collective 36.98

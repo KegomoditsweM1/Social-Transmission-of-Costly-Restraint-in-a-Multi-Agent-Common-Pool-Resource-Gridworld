@@ -762,3 +762,62 @@ Format: date, what and why, exact command, result, decision.
 - **Next:** decide between running the H2 extension (ρ = 0.5, 0.75) on the pilot
   seeds or going straight to the full design on fresh seeds, which includes
   those teacher levels.
+
+## 2026-10-25 — E18: full study (seeds 1000–1004), predictions tested
+
+- **What:** the design fixed in PREDICTIONS.md: teachers ρ ∈ {0.5, 0.75, 1} with
+  asocial, value shaping (κ = 0.03) and decision biasing (ω = 0.5), plus the
+  ρ = 0 control (asocial, value shaping); λ ∈ {0, ½, 1}; 5 fresh seeds per cell.
+  165 students, all completed (0 failed). No run excluded or repeated.
+- **Commands:** `run_batch.py` (block 1: seeds 1000–1002, 99 runs, ~9.5 h;
+  block 2: seeds 1003–1004, 66 runs, ~4.3 h), `phase3_eval.py results/full`
+  (165 ok, 8.5 h), `summarise_phase3.py`, `test_predictions.py`,
+  `make_figures.py`. Check `asocial full = half = off`: OK.
+- **Teacher restraint per apple, measured in evaluation (E):** ρ = 0.5: 0.19 / 0.20 / 0.27;
+  ρ = 0.75: 0.31 / 0.32 / 0.41; ρ = 1: 1.00 (λ = 0 / ½ / 1).
+- **Results by prediction** (restraint per apple, 95% bootstrap CI over 5 runs):
+
+  | Prediction | Result | Verdict |
+  |---|---|---|
+  | P1 restraint-specific transmission S = G(ρ) − G(0) > 0 | ρ = 1: 0.49 [0.35, 0.62], 0.46 [0.28, 0.59], 0.67 [0.54, 0.80]; ρ = 0.5 and 0.75: −0.08 to +0.08, all intervals include 0 | supported at ρ = 1 only (3/9 cells) |
+  | P2 G(1) > G(0) | as P1 at ρ = 1 | supported (3/3) |
+  | P3 G(1) − G(0.5) > 0 | 0.48 [0.32, 0.62], 0.54 [0.45, 0.61], 0.63 [0.47, 0.78] | supported (3/3) |
+  | P4 no clear effect of cost on CT (ρ = 1) | CT 0.60 / 0.64 / 0.78; CT(λ=0) − CT(λ=1) = −0.19 [−0.28, −0.09] | **not as predicted**: lower CT where restraint is costlier (supports the proposal's H1) |
+  | P5(a) retained after removal > 0 | ρ = 1: 0.34, 0.37, 0.70; ρ < 1: 0.05–0.22; all intervals above 0 | supported (9/9) |
+  | P5(b) erosion lower at λ = 0 than λ = 1 (ρ = 1) | change −0.25 / −0.27 / −0.09; difference −0.16 [−0.37, +0.07] | inconclusive |
+  | P6 decision biasing CT < 0.10 | ρ = 1: 0.03, 0.04, 0.03; ρ = 0.75: 0.19, 0.20, 0.01; ρ = 0.5: 0.29, 0.30, 0.26 | supported at ρ = 1; contradicted in 4 cells, inconclusive in 2 |
+  | P6 decision-biasing retained includes 0 (λ ∈ {0, ½}) | λ = ½, ρ = 0.5 / 0.75: 0.16, 0.12 (above 0); λ = 0, ρ = 0.5: 0.021 [0.000, 0.051] | supported in 3 cells, contradicted in 3 |
+
+  Counts from `predictions.csv`: 24 supported, 9 inconclusive, 7 contradicted,
+  1 deviation.
+- **Interpretation (planned analyses above; points below marked EXPLORATORY):**
+  - **Only a fully restrained teacher transmits restraint-specific behaviour.**
+    Beside teachers that restrain on 19–41% of last apples, value-shaping gains
+    (0.10–0.24) are no larger than beside the ρ = 0 control (0.11–0.18). The gain
+    is flat from E = 0 to E ≈ 0.4 and jumps at E = 1. EXPLORATORY explanation:
+    value shaping adds κ to whatever the teacher does, so a teacher that sometimes
+    takes the last apple raises the value of taking it as well as of waiting.
+  - **CT is misleading for weakly restrained teachers.** It divides the gain by E;
+    with E ≈ 0.2–0.4, the non-specific gain gives CT above 1 for value shaping
+    and the P6 "contradictions" for decision biasing. The decision-biasing gain
+    itself is 0.01–0.05 in every cell, unrelated to teacher restraint.
+    EXPLORATORY: report S and the raw gain as primary for ρ < 1.
+  - **Cost lowers transmission** (P4): with the fully restrained teacher, CT
+    rises from 0.60 (λ = 0, Δ = +0.94) to 0.64 (λ = ½) to 0.78 (λ = 1, Δ = −0.63).
+    The pilot (3 seeds) did not show this. Caveat: λ also changes resource
+    dynamics, not only Δ.
+  - **Persistence is replicated** for the fully restrained teacher (retained
+    0.34 / 0.37 / 0.70; pilot 0.41 / 0.46 / 0.73). It erodes least where
+    restraint pays (λ = 1), but erosion at λ = 0 and ½ is similar, so "erosion
+    ordered by cost" is not confirmed.
+  - **Decision biasing:** at λ = 1 after removal, restraint per apple 0.47–0.59
+    with high per-encounter values, as in the pilot (looping, E14). The positive
+    retained values at λ = ½, ρ < 1 are unexplained; to check encounter counts.
+  - **Replication of the pilot (ρ = 1):** value-shaping restraint 0.60 / 0.64 /
+    0.80 (pilot 0.65 / 0.62 / 0.69); asocial ≈ 0; decision-biasing CT 0.03–0.04
+    (pilot 0.03–0.04); lower restraint beside a greedy partner
+    (0.33 / 0.25 / 0.37) — EXPLORATORY.
+- **Minor:** `summarise_phase3.py` still prints "with 3 runs per condition …
+  (pilot only)"; stale message, to fix.
+- **Next:** inspect figures 7 and 8; check decision-biasing encounter counts at
+  λ = ½; write up; update README, website and supervisor.

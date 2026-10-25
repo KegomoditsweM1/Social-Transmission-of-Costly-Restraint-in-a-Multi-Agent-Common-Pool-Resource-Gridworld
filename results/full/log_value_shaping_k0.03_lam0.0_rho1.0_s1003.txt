@@ -1,0 +1,8 @@
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep    1  student return   7.65  restraint 0.48  teacher return  30.05  collective  37.70  (19s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep  100  student return  15.15  restraint 0.53  teacher return  23.80  collective  38.95  (123s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep  200  student return  13.05  restraint 0.59  teacher return  24.75  collective  37.80  (228s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep  300  student return  16.80  restraint 0.46  teacher return  22.70  collective  39.50  (335s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep  400  student return  13.95  restraint 0.73  teacher return  23.90  collective  37.85  (441s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep  500  student return  13.80  restraint 0.68  teacher return  24.05  collective  37.85  (547s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] ep  600  student return  14.10  restraint 0.68  teacher return  24.05  collective  38.15  (655s)
+[value_shaping_k0.03_lam0.0_rho1.0_s1003] FINAL (50 eval episodes): student return 15.32  restraint 0.637  collective 39.24
