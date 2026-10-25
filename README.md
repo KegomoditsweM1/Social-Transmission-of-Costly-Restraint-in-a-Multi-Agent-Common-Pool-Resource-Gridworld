@@ -103,13 +103,14 @@ The two differ only at a **restraint opportunity**, a step at which a last apple
 is adjacent. **Teacher levels** mix them there:
 
 ```math
-\pi_T^{\rho} = \rho\pi_R + (1-\rho)\pi_G, \qquad \rho \in \{0.5,\ 0.75,\ 1\},
+\pi_T^{\rho} = \rho\pi_R + (1-\rho)\pi_G, \qquad \rho \in \{0,\ 0.5,\ 0.75,\ 1\},
 ```
 
 so the teacher takes an adjacent last apple with probability $`1-\rho`$ at each
 step. Because taking an apple changes later opportunities, the nominal $`\rho`$
 is not the realised restraint rate; the realised rate is **measured** and used
-as the teacher's level. Because a learner trained alone does not learn
+as the teacher's level. The control teacher $`\rho = 0`$ moves and waits like
+$`\pi_R`$ but always takes an adjacent last apple. Because a learner trained alone does not learn
 restraint (see Results), the teacher's restrained policy is the scripted $`\pi_R`$.
 
 ### The learner
@@ -156,8 +157,10 @@ moves towards the teacher's last observed position:
 \pi_{\mathrm{DB}} = (1-\omega)\,\pi_{\mathrm{asoc}} + \omega\,\pi_{\mathrm{soc}}.
 ```
 
-An **asocial** student, which receives no information about the teacher, is the
-control. Value shaping acts only through learning; decision biasing acts at the
+These are the two social reinforcement-learning models compared by Najar et
+al. (2020), who found that value shaping best describes how people learn from
+others' actions. An **asocial** student, which receives no information about
+the teacher, is the control. Value shaping acts only through learning; decision biasing acts at the
 moment of choice, during training and evaluation alike.
 
 The strengths $`\kappa`$ and $`\omega`$ were fixed before the main runs by a rule
@@ -196,8 +199,8 @@ each last apple counts once however often the agent comes back to it:
 where a "last apple" is one patch's spell in the last-apple state, from the
 moment the patch is reduced to one apple until that apple is taken or the patch
 regrows, and apples taken first by the other agent are excluded. Both rates are
-reported; the per-apple rate is the more conservative and is the one the
-results lead with.
+reported; the per-apple rate is the **primary measure** of the full study
+(adopted after the pilot, before the full study ran).
 
 Restraint is always read together with **collective return**, **survival time**
 (steps until every patch is empty) and **patch losses by cause**, including
@@ -262,13 +265,22 @@ is the teacher's own restraint. $`\mathrm{CT} = 1`$ means the student matched th
 teacher, and a confidence interval that includes zero means no evidence of
 transmission. Because $`\mathrm{CT}`$ divides by the teacher's own restraint, the
 effect of the teacher's level is compared with the **raw gain**
-$`A_{\mathrm{full}} - A_{\mathrm{solo}}`$ instead. The unit of analysis is the
+$`G = A_{\mathrm{full}} - A_{\mathrm{solo}}`$ instead, and CT is unreliable when
+$`E`$ is small. Part of the gain may come from copying the teacher's waiting
+rather than its restraint, so a control teacher that never restrains
+($`\rho = 0`$) gives the **restraint-specific** gain
+
+```math
+S(\rho) = G(\rho) - G(0).
+```
+
+The unit of analysis is the
 independent training run; results are means with 95% bootstrap confidence
 intervals over runs.
 
 ---
 
-## Results so far
+## Results
 
 ### The environment is a social dilemma where it should be
 
@@ -326,7 +338,7 @@ far into the episode it is. **Restraint is profitable but hard to learn alone**,
 which is exactly the situation in which a teacher could help. The teacher in
 the experiments is therefore the scripted restrained policy $`\pi_R`$.
 
-### The three teacher levels
+### The teacher levels
 
 Measured alone at $`\lambda = 1`$ over 50 episodes:
 
@@ -336,145 +348,248 @@ Measured alone at $`\lambda = 1`$ over 50 episodes:
 | 0.75 | 0.43 [0.37, 0.48] | 3.54 | 58% |
 | 1 | 1.00 [1.00, 1.00] | 0.00 | 0% |
 
-The levels are clearly distinct. The realised restraint is well below the
-nominal $`\rho`$, because the teacher draws at **every step** a last apple is
-adjacent, and often waits beside one for several steps. The measured rates,
-not $`\rho`$, are the teacher levels. Even 43% restraint destroys the resource
-in most episodes: at $`\lambda = 1`$ a single lapse kills a patch for good.
+The realised restraint is well below the nominal $`\rho`$, because the teacher
+draws at **every step** a last apple is adjacent, and often waits beside one for
+several steps. Counted **per apple**, as in the full study, the partly
+restrained teachers leave even fewer last apples untaken: 0.12–0.19
+($`\rho = 0.5`$) and 0.20–0.29 ($`\rho = 0.75`$) across $`\lambda`$, because they
+meet the same apple several times and usually take it in the end. A control
+teacher at $`\rho = 0`$ moves and waits exactly like $`\pi_R`$ but always takes an
+adjacent last apple (restraint 0).
 
-### Pilot: does restraint transmit? *(3 runs per condition; exploratory)*
+---
 
-Students were trained for 600 episodes beside the fully restrained teacher
-($`\rho = 1`$) at each $`\lambda`$. With only three runs per condition these
-results show what the full design should test; they are not strong evidence.
-Intervals are 95% bootstrap intervals over runs.
+### Full study
+
+The full study tested predictions written down and committed **before** it ran
+([PREDICTIONS.md](PREDICTIONS.md)), on fresh seeds that played no part in
+choosing the design, the parameters or the measures:
+
+- **Teachers:** $`\rho = 0.5,\ 0.75,\ 1`$, plus the $`\rho = 0`$ control.
+- **Students:** asocial, value shaping ($`\kappa = 0.03`$) and decision biasing
+  ($`\omega = 0.5`$); asocial and value shaping only beside the control.
+- **Dilemma:** $`\lambda \in \{0, \tfrac12, 1\}`$.
+- **Runs:** 5 independent seeds per cell (1000–1004), **165 students**, none
+  failed or excluded.
+
+The primary measure is restraint **per apple**. Intervals are 95% bootstrap
+intervals over runs. `scripts/test_predictions.py` computes every prediction
+from the results.
+
+#### Value shaping transmits restraint from a fully restrained teacher
+
+With the fully restrained teacher ($`\rho = 1`$) observable throughout:
 
 | | $`\lambda`$ | Restraint per apple | (per encounter) | Last apples taken per episode | Collective return | CT per apple [95% CI] |
 |---|---|---|---|---|---|---|
-| asocial | 0 | 0.00 | (0.04) | 21.6 | 45.3 | |
-| asocial | $`\tfrac12`$ | 0.00 | (0.02) | 13.7 | 36.4 | |
-| asocial | 1 | 0.02 | (0.03) | 2.7 | 28.2 | |
-| value shaping | 0 | 0.65 | (0.83) | 2.5 | 38.9 | 0.65 [0.57, 0.73] |
-| value shaping | $`\tfrac12`$ | 0.62 | (0.67) | 2.0 | 38.7 | 0.62 [0.58, 0.65] |
-| value shaping | 1 | 0.69 | (0.76) | 1.4 | 34.9 | 0.67 [0.60, 0.74] |
-| decision biasing | 0 | 0.05 | (0.37) | 18.9 | 44.5 | 0.04 [0.03, 0.05] |
-| decision biasing | $`\tfrac12`$ | 0.04 | (0.37) | 14.1 | 36.1 | 0.03 [0.02, 0.04] |
-| decision biasing | 1 | 0.06 | (0.30) | 3.8 | 22.6 | 0.03 [−0.00, 0.05] |
+| asocial | 0 | 0.00 | (0.08) | 20.3 | 44.5 | |
+| asocial | $`\tfrac12`$ | 0.00 | (0.04) | 10.4 | 36.8 | |
+| asocial | 1 | 0.01 | (0.02) | 3.0 | 26.9 | |
+| value shaping | 0 | **0.60** | (0.67) | 2.9 | 39.1 | 0.60 [0.49, 0.69] |
+| value shaping | $`\tfrac12`$ | **0.64** | (0.76) | 2.2 | 39.0 | 0.64 [0.56, 0.71] |
+| value shaping | 1 | **0.80** | (0.86) | 1.0 | 36.8 | 0.78 [0.69, 0.87] |
+| decision biasing | 0 | 0.04 | (0.37) | 19.3 | 44.3 | 0.03 [0.03, 0.03] |
+| decision biasing | $`\tfrac12`$ | 0.04 | (0.36) | 13.5 | 36.3 | 0.04 [0.03, 0.04] |
+| decision biasing | 1 | 0.05 | (0.32) | 3.8 | 23.3 | 0.03 [0.02, 0.05] |
 
-![Restraint by condition, per apple and per encounter](results/pilot/figures/1_restraint_by_condition.png)
+![Restraint by condition, per apple and per encounter](results/full/figures/1_restraint_by_condition.png)
 
-**Value shaping transmits restraint at every $`\lambda`$, and the returns follow
-the dilemma.** Compared with an asocial student, a value-shaping student's own
-return and the collective return change by:
+**The outcomes follow the dilemma.** Value-shaping students cut the last
+apples taken from about 20 to 3 per episode at $`\lambda = 0`$. Compared with
+asocial students, their own return and the collective return change by:
 
 | $`\lambda`$ | Student | Collective | Reading |
 |---|---|---|---|
-| 0 | $`-14.2`$ | $`-6.4`$ | restraint is wasted: patches regrow anyway |
-| $`\tfrac12`$ | $`-7.5`$ | $`+2.3`$ | a social dilemma: the student pays, the group gains |
-| 1 | $`+1.6`$ | $`+6.6`$ | restraint pays the student and the group |
+| 0 | $`-12.4`$ | $`-5.4`$ | restraint is wasted: patches regrow anyway |
+| $`\tfrac12`$ | $`-4.0`$ | $`+2.2`$ | a social dilemma: the student pays, the pair gains |
+| 1 | $`+1.3`$ | $`+9.9`$ | restraint pays the student and the pair |
 
-**Decision biasing transmits almost nothing.** Its students leave a last apple
-to follow the teacher, then come back and take it later. Counted per
-encounter, each departure looked like restraint (about 0.35); counted per
-apple, almost every apple is eventually eaten (0.04–0.06). The outcomes agree:
-last apples taken do not fall at $`\lambda = \tfrac12`$ and rise at
-$`\lambda = 1`$, where all four patches are lost in 93% of episodes (asocial:
-13%), because following the teacher leads the student to more last apples.
+This is also the cost of restraint as the **learners themselves** experience it,
+and it falls in the same order as $`\Delta`$, which was measured with scripted
+students.
 
-**Transmitted restraint persists after the teacher is removed, but the more it
-costs the student, the faster it wears away.** Restraint per apple before and
-after 300 further episodes of learning without the teacher:
+![Restraint, last apples taken and collective return](results/full/figures/2_resource_outcomes.png)
+
+#### Students copy restraint, not only waiting, but only from a consistent teacher
+
+Beside the $`\rho = 0`$ control, which moves and waits like the restrained teacher
+but takes every last apple it reaches, value-shaping students still leave a few
+last apples: some of what value shaping transmits is general waiting. The
+**restraint-specific** part is the gain beside a teacher minus the gain beside
+the control. Gain over asocial students, per apple:
+
+| $`\lambda`$ | Control $`\rho = 0`$ | $`\rho = 0.5`$ | $`\rho = 0.75`$ | $`\rho = 1`$ | Restraint-specific, $`\rho = 1`$ |
+|---|---|---|---|---|---|
+| 0 | 0.11 [0.03, 0.20] | 0.12 [0.02, 0.24] | 0.10 [0.07, 0.14] | 0.60 [0.49, 0.69] | 0.49 [0.35, 0.62] |
+| $`\tfrac12`$ | 0.18 [0.10, 0.34] | 0.10 [0.08, 0.12] | 0.24 [0.19, 0.28] | 0.64 [0.56, 0.71] | 0.46 [0.28, 0.59] |
+| 1 | 0.11 [0.02, 0.21] | 0.16 [0.03, 0.28] | 0.19 [0.09, 0.30] | 0.78 [0.69, 0.87] | 0.67 [0.54, 0.80] |
+
+Teachers that leave only 12–29% of last apples untaken transmit **no more than
+the control**: their restraint-specific gain is indistinguishable from zero in
+all six cells. Only the fully restrained teacher transmits restraint. A
+plausible reason is that value shaping raises the value of whatever the teacher
+does, so a teacher that sometimes takes the last apple also teaches taking it.
+No teacher level lies between 0.3 and 1, so these results cannot tell a sharp
+threshold from a steep rise in that range.
+
+![Gain against the teacher's measured restraint](results/full/figures/8_H2_gain_vs_teacher.png)
+
+#### Costlier restraint is transmitted less
+
+With the fully restrained teacher, transmission rises as the cost of restraint
+falls: CT 0.60 at $`\lambda = 0`$ ($`\Delta = +0.94`$), 0.64 at $`\lambda = \tfrac12`$
+($`\Delta = +0.18`$) and 0.78 at $`\lambda = 1`$ ($`\Delta = -0.63`$); the difference
+between $`\lambda = 0`$ and $`\lambda = 1`$ is $`-0.19\ [-0.28, -0.09]`$. The pilot,
+with three runs, had shown no clear effect, and the prediction based on it was
+wrong. The result supports the proposal's hypothesis that costly restraint is
+transmitted less. $`\lambda`$ also changes how the resource behaves, not only
+the cost, so this is an association with cost rather than a pure effect of it.
+
+![CT against the cost of restraint](results/full/figures/7_H1_ct_vs_cost.png)
+
+#### Transmitted restraint persists after the teacher is removed
+
+Restraint per apple before and after 300 further episodes in which the student
+learns from its own reward without observing the teacher ($`\rho = 1`$):
 
 | | $`\lambda = 0`$ | $`\lambda = \tfrac12`$ | $`\lambda = 1`$ |
 |---|---|---|---|
-| cost of restraint $`\Delta`$ (with this teacher) | $`+0.94`$ | $`+0.18`$ | $`-0.63`$ |
-| value shaping, before → after | 0.65 → 0.41 | 0.62 → 0.46 | 0.69 → 0.75 |
-| decision biasing, before → after | 0.05 → 0.05 | 0.04 → 0.02 | 0.06 → 0.56 * |
+| cost of restraint $`\Delta`$ | $`+0.94`$ | $`+0.18`$ | $`-0.63`$ |
+| value shaping, before → after | 0.60 → 0.35 | 0.64 → 0.37 | 0.80 → 0.71 |
+| decision biasing, before → after | 0.04 → 0.02 | 0.04 → 0.02 | 0.05 → 0.59 * |
 | asocial, after | 0.00 | 0.00 | 0.01 |
 
-Where restraint is pure cost ($`\lambda = 0`$) the student's own reward erodes it
-most; where it pays ($`\lambda = 1`$) it holds and even grows slightly. With
-three runs this is a pattern for the full design to test, not a finding.
+Value-shaping restraint stays well above that of asocial students in every
+condition (retained 0.34, 0.37 and 0.70). It erodes least where restraint pays
+($`\lambda = 1`$), but erosion at $`\lambda = 0`$ and $`\tfrac12`$ is similar, so the
+pilot's suggestion that erosion follows cost was **not confirmed**.
 
-![Restraint before and after the teacher is removed](results/pilot/figures/3_persistence.png)
+\* Not transmission: after removal these students loop between two cells
+beside last apples, so they leave apples by circling rather than by a sensible
+policy (see the pilot below).
 
-\* An odd case. After removal these students alternate between two cells
-beside last apples, a loop caused by two different cells mapping to states
-whose best actions point at each other. Per encounter this read as 0.95,
-because every return starts a new encounter (up to 121 per episode, against
-about 3 for asocial students); per apple it is 0.56. They do leave about half
-the last apples they reach, but by looping rather than by a sensible policy:
-their own return (9.0) is lower than an asocial student's after the same
-phase (11.3). This case is why restraint is measured per apple.
+![Restraint before and after the teacher is removed](results/full/figures/3_persistence.png)
+
+#### Decision biasing transmits almost nothing
+
+Its gain over asocial students is 0.01–0.05 per apple in every cell, whatever
+the teacher's restraint. With weakly restrained teachers its CT exceeds 0.1,
+but only because CT divides by the teacher's low restraint. **CT is unreliable
+when the teacher's own restraint is small**; the raw and restraint-specific
+gains are the measures to read there.
+
+#### Partners
+
+With learning off, value-shaping students leave fewer last apples beside a
+greedy agent (per apple 0.33, 0.25, 0.37) or a naive learner (0.40, 0.47, 0.68)
+than beside their own teacher (0.60, 0.64, 0.80). Since their values do not
+change in this test, this shows that restraint depends on the context it was
+learned in, not that greedy company erodes it.
+
+#### The predictions
+
+| Prediction | Outcome |
+|---|---|
+| P1 restraint-specific transmission in every cell | supported with the fully restrained teacher (3 of 3); not with the partly restrained teachers (6 inconclusive) |
+| P2 restrained teacher beats the control | supported (3 of 3) |
+| P3 more restrained teachers transmit more | supported (3 of 3), as a jump at full restraint rather than a gradual rise |
+| P4 no clear effect of cost on transmission | **not as predicted**: costlier restraint is transmitted less |
+| P5a restraint persists after removal | supported (9 of 9) |
+| P5b erosion follows cost | inconclusive |
+| P6 decision biasing transmits almost nothing | supported with the fully restrained teacher; contradicted by CT in 4 cells with weak teachers, where CT is unreliable (raw gain at most 0.05) |
+
+---
+
+### Pilot *(3 runs per condition, $`\rho = 1`$; exploratory)*
+
+The pilot ran the design at a small scale before the full study. It is
+superseded by the full study, whose results at $`\rho = 1`$ replicate it, but it
+led to three changes made before the full study ran:
+
+- **Restraint per apple.** One group of decision-biasing students, after
+  removal, alternated between two cells beside last apples, a loop caused by
+  two cells mapping to states whose best actions point at each other. Every
+  return started a new encounter (up to 121 per episode, against about 3
+  normally), so per-encounter restraint read 0.95; per apple it was 0.56, and
+  the students' own return was lower than asocial students'. Per-apple
+  restraint became the primary measure.
+- **The $`\rho = 0`$ control.** Teachers stand still for most of the episode, so
+  value shaping might transmit waiting rather than restraint. In the pilot
+  control, value-shaping students showed a small gain (0.07–0.21) against
+  0.62–0.67 beside the restrained teacher, which led to the restraint-specific
+  measure.
+- **Predictions written down in advance**, for the full study.
+
+| | $`\lambda`$ | Restraint per apple | (per encounter) | CT per apple [95% CI] |
+|---|---|---|---|---|
+| value shaping | 0 | 0.65 | (0.83) | 0.65 [0.57, 0.73] |
+| value shaping | $`\tfrac12`$ | 0.62 | (0.67) | 0.62 [0.58, 0.65] |
+| value shaping | 1 | 0.69 | (0.76) | 0.67 [0.60, 0.74] |
+| decision biasing | 0 | 0.05 | (0.37) | 0.04 [0.03, 0.05] |
+| decision biasing | $`\tfrac12`$ | 0.04 | (0.37) | 0.03 [0.02, 0.04] |
+| decision biasing | 1 | 0.06 | (0.30) | 0.03 [−0.00, 0.05] |
 
 ![Per-encounter against per-apple restraint for every run](results/pilot/figures/5_encounter_inflation.png)
 
-**Restraint depends on the partner.** With learning off, value-shaping
-students leave fewer last apples beside a greedy agent (per apple 0.31, 0.16,
-0.21) or a naive learner (0.56, 0.42, 0.36) than beside their teacher (0.65,
-0.62, 0.69).
-
-**Restraint here looks like waiting, not passivity.** Once every patch is down
-to its last apple, nothing is harvestable for 86–93% of steps, and the scripted
+**Restraint looks like waiting, not passivity.** Once every patch is down to its
+last apple, nothing is harvestable for 86–93% of steps, and the scripted
 teacher stands still for most of the episode. Value-shaping students wait
 beside the last apple, but almost never stand still while an ordinary apple is
 in view (0.3–0.6% of steps; the teacher 3–7%). Their loss of return is the last
 apples they leave, not food they ignore.
 
-### What the pilot suggests
+---
 
-These readings rest on three runs, one teacher level and one strength of each
-mechanism, so they are hypotheses for the full design rather than conclusions.
+### What the results show
 
-- **Observation can transmit a behaviour the learner's own reward opposes.**
-  At $`\lambda = 0`$ and $`\lambda = \tfrac12`$ taking the last apple pays the
-  student, yet value-shaping students left most last apples. The social bonus
-  acts like a prior in the student's values, which its own reward must then
-  overcome.
-- **What is copied matters.** Value shaping changes what the learner values and
-  transmits restraint. Decision biasing changes where the learner goes and
-  transmits proximity instead: following a restrained teacher leads the student
-  to temptation without the values to resist it, and at $`\lambda = 1`$ it
-  damages the resource more than learning alone.
-- **The cost of restraint seems to govern persistence more than acquisition.**
-  Transmission was similar at every $`\lambda`$, but once the student learned on
-  its own, restraint eroded in proportion to its cost. Where restraint pays but
-  is hard to discover alone ($`\lambda = 1`$), observation lets the learner reach
-  a policy it would not find by itself, and its own reward then keeps it.
-- **A restraint rate must be read against the resource.** Waiting inflates
-  per-step rates and back-and-forth movement inflates per-encounter rates; last
-  apples taken and collective return show what actually happened.
+- **Observation can transmit a behaviour the learner's own reward opposes**, but
+  only from a consistent model. Beside a fully restrained teacher, value-shaping
+  students left most last apples even where taking them pays; beside teachers
+  that usually took them in the end, they learned no more restraint than beside
+  one that always did.
+- **What is copied matters.** Value shaping changes what the learner values, and
+  its restraint outlasts the teacher. Decision biasing changes where the learner
+  goes: following a restrained teacher leads the student to temptation without
+  the values to resist it. Value shaping is also the mechanism that best
+  describes how people learn from others' actions (Najar et al., 2020).
+- **Cost matters for acquisition.** Restraint was transmitted less where it cost
+  the learner more; where it pays but is hard to discover alone
+  ($`\lambda = 1`$), observation let learners reach a policy they did not find by
+  themselves.
+- **Measures of restraint are easily inflated.** Back-and-forth movement
+  inflates per-encounter rates, waiting inflates per-step rates, and CT
+  overstates transmission from weakly restrained teachers. Restraint is read
+  against last apples taken, collective return and the control teacher.
 
-### Open questions and next experiments
+### Limitations and next steps
 
-- **Is it restraint, or copied waiting?** The teacher stands still most of the
-  time, so value shaping might transmit waiting, with restraint as a side
-  effect. A control teacher that moves and waits exactly like the restrained
-  teacher but always takes the last apple ($`\rho = 0`$) separates the two:
-  value-shaping students beside it should show no gain in restraint. *(Running.)*
-- **H2: do more restrained teachers transmit more?** Students beside the teacher
-  levels $`\rho = 0.5`$ and $`0.75`$. *(Running.)*
-- **Full design:** all three teacher levels × three $`\lambda`$ × three conditions,
-  on fresh seeds, with the predictions above written down before it runs.
-- **Robustness:** the alternative strengths fixed in advance ($`\kappa = 0.1`$,
-  $`\omega = 0.3`$), the evaluation's random-move rate, and longer training.
-
-**Limitations.** The cost of restraint $`\Delta`$ is measured with scripted
-students, not the learners; the scripted teacher sees the whole grid while the
-student sees part of it, which partly explains why students wait beside last
-apples; the three-feature state causes the looping described above; and the
-study uses one small environment.
+- **The cost of restraint.** All students are learners, but $`\Delta`$ is computed
+  with the scripted policies in the student's seat, since only they are
+  perfectly restrained or perfectly greedy. The learners' own returns fall in
+  the same order.
+- **Unequal views.** The teacher sees the whole grid; the student sees apples
+  within four cells. A student that sees no other apple has little reason to
+  leave a protected one. A full-view condition, used from training onwards,
+  would test this.
+- **A coarse state.** The three-feature state produces the looping described
+  above.
+- **Teacher levels.** No teacher lies between 0.3 and 1 restraint per apple;
+  teachers at $`\rho = 0.9`$ or $`0.95`$ would show where transmission begins.
+- **One environment.** A second environment (a different layout or a different
+  social dilemma) would show whether the results generalise beyond this map.
+- **Greedy company.** Whether restraint erodes faster when the student keeps
+  *learning* beside a greedy partner is untested.
 
 ## Project status
 
 | Stage | Contents | Status |
 |---|---|---|
 | Environment | gridworld, scripted policies, social-dilemma validation | complete |
-| Teacher | tabular Q-learner, teacher training, three measured teacher levels | complete |
-| Students | asocial, value shaping, decision biasing; parameter selection; pilot | complete |
-| Evaluation | transmission, persistence after the teacher is removed, partner tests | built; pilot complete |
-| Pilot extensions | teacher levels $`\rho = 0.5, 0.75`$ (H2) and the $`\rho = 0`$ control | running |
-| Full design | three teacher levels × three $`\lambda`$ × three conditions on fresh seeds; analysis and report | next |
+| Teacher | three measured teacher levels and the $`\rho = 0`$ control | complete |
+| Students | asocial, value shaping, decision biasing; parameter selection | complete |
+| Pilot | 3 runs per condition; per-apple measure; $`\rho = 0`$ control | complete |
+| Full study | 165 students on fresh seeds; predictions tested | complete |
+| Write-up | report; second environment (to be agreed) | in progress |
 
 ---
 
@@ -501,11 +616,13 @@ scripts/
   stillness_check.py      teacher and student stillness: waiting or passivity?
   phase3_eval.py          transmission, persistence after removal, partner tests
   summarise_phase3.py     CT, raw gain and persistence with bootstrap intervals
+  test_predictions.py     tests the predictions of PREDICTIONS.md
   make_figures.py         all figures, from a results folder
   view.py                 graphical viewer; loads trained students; records MP4 video
 tests/                    unit and integration tests
 results/                  outputs, kept in full, including unsuccessful runs
 EXPERIMENT_LOG.md         a dated record of every run and decision
+PREDICTIONS.md            the full study's predictions, committed before it ran
 ```
 
 ---
@@ -599,12 +716,28 @@ python scripts/stillness_check.py results/pilot
 python scripts/make_figures.py results/pilot
 ```
 
+**Reproduce the full study** (about 14 hours of training and 8.5 hours of
+evaluation with 3 workers), then test the predictions:
+
+```bash
+python scripts/run_batch.py --conditions asocial value_shaping decision_biasing --kappa 0.03 --omega 0.5 \
+    --lams 0.0 0.5 1.0 --rho 0.5 0.75 1.0 --seeds 1000 1001 1002 1003 1004 --out-dir results/full
+python scripts/run_batch.py --conditions asocial value_shaping --kappa 0.03 \
+    --lams 0.0 0.5 1.0 --rho 0.0 --seeds 1000 1001 1002 1003 1004 --out-dir results/full
+python scripts/phase3_eval.py results/full
+python scripts/summarise_phase3.py results/full
+python scripts/test_predictions.py results/full
+python scripts/make_figures.py results/full
+```
+
 ---
 
 ## Reproducibility
 
 - Every run is seeded; the same command reproduces the same numbers exactly.
-- Training and evaluation use disjoint random seeds.
+- Training and evaluation use disjoint random seeds; the full study's seeds
+  (1000–1004) were never used in the pilot or in choosing parameters.
+- The full study's predictions and analysis script were committed before it ran.
 - Package versions are pinned in `requirements.txt`.
 - `EXPERIMENT_LOG.md` records every run that informed a decision, including
   failed ones, with the exact command and the reason for it.
@@ -618,6 +751,7 @@ python scripts/make_figures.py results/pilot
 - Guo, Z. et al. (2026). SocialJax: An evaluation suite for multi-agent reinforcement learning in sequential social dilemmas. *ICLR*.
 - Keßler, S., Bautista-Salinero, M., Tennie, C. and Wu, C. M. (2026). Emergent social transmission of model-based representations without inference. arXiv:2604.05777.
 - Leibo, J. Z., Zambaldi, V., Lanctot, M., Marecki, J. and Graepel, T. (2017). Multi-agent reinforcement learning in sequential social dilemmas. *AAMAS*.
+- Najar, A., Bonnet, E., Bahrami, B. and Palminteri, S. (2020). The actions of others act as a pseudo-reward to drive imitation in the context of social reinforcement learning. *PLOS Biology*, 18(12), e3001028.
 - Perolat, J. et al. (2017). A multi-agent reinforcement learning model of common-pool resource appropriation. *NeurIPS*.
 - Terry, J. K. et al. (2021). PettingZoo: Gym for multi-agent reinforcement learning. *NeurIPS*.
 
