@@ -575,8 +575,7 @@ apples they leave, not food they ignore.
   above.
 - **Teacher levels.** No teacher lies between 0.3 and 1 restraint per apple;
   teachers at $`\rho = 0.9`$ or $`0.95`$ would show where transmission begins.
-- **One environment.** A second environment (a different layout or a different
-  social dilemma) would show whether the results generalise beyond this map.
+- **One environment.** All results come from a single small gridworld.
 - **Greedy company.** Whether restraint erodes faster when the student keeps
   *learning* beside a greedy partner is untested.
 
@@ -589,7 +588,7 @@ apples they leave, not food they ignore.
 | Students | asocial, value shaping, decision biasing; parameter selection | complete |
 | Pilot | 3 runs per condition; per-apple measure; $`\rho = 0`$ control | complete |
 | Full study | 165 students on fresh seeds; predictions tested | complete |
-| Write-up | report; second environment (to be agreed) | in progress |
+| Write-up | report | in progress |
 
 ---
 
