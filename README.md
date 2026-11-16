@@ -579,17 +579,6 @@ apples they leave, not food they ignore.
 - **Greedy company.** Whether restraint erodes faster when the student keeps
   *learning* beside a greedy partner is untested.
 
-## Project status
-
-| Stage | Contents | Status |
-|---|---|---|
-| Environment | gridworld, scripted policies, social-dilemma validation | complete |
-| Teacher | three measured teacher levels and the $`\rho = 0`$ control | complete |
-| Students | asocial, value shaping, decision biasing; parameter selection | complete |
-| Pilot | 3 runs per condition; per-apple measure; $`\rho = 0`$ control | complete |
-| Full study | 165 students on fresh seeds; predictions tested | complete |
-| Write-up | report | in progress |
-
 ---
 
 ## Project structure
